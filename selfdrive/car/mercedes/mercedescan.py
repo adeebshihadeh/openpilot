@@ -1,31 +1,48 @@
 import struct
 
 
-# *** Toyota specific ***
+# *** Mercedes specific ***
 
-def fix(msg, addr):
-  checksum = 0
-  idh = (addr & 0xff00) >> 8
-  idl = (addr & 0xff)
+def calc_checksum(data):
+  checksum = 0xFF
+  temp_chk = 0
+  bit_sum = 0
 
-  checksum = idh + idl + len(msg) + 1
-  for d_byte in msg:
-    checksum += ord(d_byte)
-
-  #return msg + chr(checksum & 0xFF)
-  return msg + struct.pack("B", checksum & 0xFF)
+  for byte in data:
+    shift = 0x80
+    iterate = 8
+    while iterate:
+      iterate -= 1
+      bit_sum = byte & shift
+      temp_chk = checksum & 0x80
+      if bit_sum != 0:
+        bit_sum = 0x1C
+        if (temp_chk != 0):
+          bit_sum = 1
+        checksum = checksum << 1
+        temp_chk = checksum | 1
+        bit_sum ^= temp_chk
+      else:
+        if temp_chk != 0:
+          bit_sum = 0x1D
+        checksum = checksum << 1
+        bit_sum ^= checksum
+      checksum = bit_sum
+      shift = shift >> 1
+  return ~checksum & 0xFF
 
 
 def make_can_msg(addr, dat, alt, cks=False):
   if cks:
-    dat = fix(dat, addr)
+    dat.append(calc_checksum(dat))
   return [addr, 0, dat, alt]
 
 
-def create_video_target(frame, addr):
-  counter = frame & 0xff
-  msg = struct.pack("!BBBBBBB", counter, 0x03, 0xff, 0x00, 0x00, 0x00, 0x00)
-  return make_can_msg(addr, msg, 1, True)
+
+
+
+# ********** unimplemented stuff taken from toyotacan.py **********
+
 
 
 def create_ipas_steer_command(packer, steer, enabled, apgs_enabled):
@@ -78,17 +95,6 @@ def create_accel_command(packer, accel, pcm_cancel, standstill_req):
   return packer.make_can_msg("ACC_CONTROL", 0, values)
 
 
-def create_fcw_command(packer, fcw):
-  # values = {
-  #   "FCW": fcw,
-  #   "SET_ME_X20": 0x20,
-  #   "SET_ME_X10": 0x10,
-  #   "SET_ME_X80": 0x80,
-  # }
-  # return packer.make_can_msg("ACC_HUD", 0, values)
-  return None
-
-
 def create_ui_command(packer, steer, sound1, sound2):
   # values = {
   #   "RIGHT_LINE": 1,
@@ -105,3 +111,15 @@ def create_ui_command(packer, steer, sound1, sound2):
   # }
   # return packer.make_can_msg("LKAS_HUD", 0, values)
   return None
+
+def fix(msg, addr):
+  checksum = 0
+  idh = (addr & 0xff00) >> 8
+  idl = (addr & 0xff)
+
+  checksum = idh + idl + len(msg) + 1
+  for d_byte in msg:
+    checksum += ord(d_byte)
+
+  #return msg + chr(checksum & 0xFF)
+  return msg + struct.pack("B", checksum & 0xFF)
