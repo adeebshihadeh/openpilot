@@ -107,11 +107,6 @@ class CarController(object):
     self.steer_angle_enabled = False
     self.ipas_reset_counter = 0
 
-    self.fake_ecus = set()
-    if enable_camera: self.fake_ecus.add(ECU.CAM)
-    if enable_dsu: self.fake_ecus.add(ECU.DSU)
-    if enable_apg: self.fake_ecus.add(ECU.APGS)
-
     self.packer = CANPacker(dbc_name)
 
   def update(self, sendcan, enabled, CS, frame, actuators,
@@ -188,24 +183,24 @@ class CarController(object):
     # toyota can trace shows this message at 42Hz, with counter adding alternatively 1 and 2;
     # sending it at 100Hz seem to allow a higher rate limit, as the rate limit seems imposed
     # on consecutive messages
-    if ECU.CAM in self.fake_ecus:
-      if self.angle_control:
-        can_sends.append(create_steer_command(self.packer, 0., frame))
-      else:
-        can_sends.append(create_steer_command(self.packer, apply_steer, frame))
+    # if ECU.CAM in self.fake_ecus:
+    #   if self.angle_control:
+    #     can_sends.append(create_steer_command(self.packer, 0., frame))
+    #   else:
+    #     can_sends.append(create_steer_command(self.packer, apply_steer, frame))
 
-    if self.angle_control:
-      can_sends.append(create_ipas_steer_command(self.packer, apply_angle, self.steer_angle_enabled, 
-                                                 ECU.APGS in self.fake_ecus))
-    elif ECU.APGS in self.fake_ecus:
-      can_sends.append(create_ipas_steer_command(self.packer, 0, 0, True))
+    # if self.angle_control:
+    #   can_sends.append(create_ipas_steer_command(self.packer, apply_angle, self.steer_angle_enabled, 
+    #                                              ECU.APGS in self.fake_ecus))
+    # elif ECU.APGS in self.fake_ecus:
+    #   can_sends.append(create_ipas_steer_command(self.packer, 0, 0, True))
 
-    # accel cmd comes from DSU, but we can spam can to cancel the system even if we are using lat only control
-    if (frame % 3 == 0 and ECU.DSU in self.fake_ecus) or (pcm_cancel_cmd and ECU.CAM in self.fake_ecus):
-      if ECU.DSU in self.fake_ecus:
-        can_sends.append(create_accel_command(self.packer, apply_accel, pcm_cancel_cmd, self.standstill_req))
-      else:
-        can_sends.append(create_accel_command(self.packer, 0, pcm_cancel_cmd, False))
+    # # accel cmd comes from DSU, but we can spam can to cancel the system even if we are using lat only control
+    # if (frame % 3 == 0 and ECU.DSU in self.fake_ecus) or (pcm_cancel_cmd and ECU.CAM in self.fake_ecus):
+    #   if ECU.DSU in self.fake_ecus:
+    #     can_sends.append(create_accel_command(self.packer, apply_accel, pcm_cancel_cmd, self.standstill_req))
+    #   else:
+    #     can_sends.append(create_accel_command(self.packer, 0, pcm_cancel_cmd, False))
 
     # ui mesg is at 100Hz but we send asap if:
     # - there is something to display

@@ -33,7 +33,8 @@ class CarInterface(object):
     # sending if read only is False
     if sendcan is not None:
       self.sendcan = sendcan
-      self.CC = CarController(self.cp.dbc_name, CP.carFingerprint)
+      # self.CC = CarController(self.cp.dbc_name, CP.carFingerprint)
+      self.CC = None
 
   @staticmethod
   def compute_gb(accel, speed):
@@ -72,7 +73,7 @@ class CarInterface(object):
     ret.steerKiBP, ret.steerKpBP = [[0.], [0.]]
     ret.steerActuatorDelay = 0.12  # Default delay, Prius has larger delay
 
-    if candidate == CAR.PRIUS:
+    if candidate == CAR.ECLASS:
       ret.safetyParam = 66  # see conversion factor for STEER_TORQUE_EPS in dbc file
       ret.wheelbase = 2.70
       ret.steerRatio = 15.59   # unknown end-to-end spec
@@ -91,8 +92,8 @@ class CarInterface(object):
 
     # min speed to enable ACC. if car can do stop and go, then set enabling speed
     # to a negative value, so it won't matter.
-    if candidate in [CAR.RAV4, CAR.COROLLA]: # TODO: hack ICE to do stop and go
-      ret.minEnableSpeed = 19. * CV.MPH_TO_MS
+    # if candidate in [CAR.RAV4, CAR.COROLLA]: # TODO: hack ICE to do stop and go
+    #   ret.minEnableSpeed = 19. * CV.MPH_TO_MS
 
     centerToRear = ret.wheelbase - ret.centerToFront
     # TODO: get actual value, for now starting with reasonable value for
@@ -171,20 +172,21 @@ class CarInterface(object):
     ret.steeringAngle = self.CS.angle_steers
     ret.steeringRate = self.CS.angle_steers_rate
 
-    ret.steeringTorque = self.CS.steer_torque_driver
-    ret.steeringPressed = self.CS.steer_override
+    # ret.steeringTorque = self.CS.steer_torque_driver
+    # ret.steeringPressed = self.CS.steer_override
 
     # cruise state
-    ret.cruiseState.enabled = self.CS.pcm_acc_status != 0
-    ret.cruiseState.speed = self.CS.v_cruise_pcm * CV.KPH_TO_MS
-    ret.cruiseState.available = bool(self.CS.main_on)
-    ret.cruiseState.speedOffset = 0.
-    if self.CP.carFingerprint == CAR.RAV4H:
-      # ignore standstill in hybrid rav4, since pcm allows to restart without
-      # receiving any special command
-      ret.cruiseState.standstill = False
-    else:
-      ret.cruiseState.standstill = self.CS.pcm_acc_status == 7
+    # ret.cruiseState.enabled = self.CS.pcm_acc_status != 0
+    ret.cruiseState.enabled = False
+    # ret.cruiseState.speed = self.CS.v_cruise_pcm * CV.KPH_TO_MS
+    # ret.cruiseState.available = bool(self.CS.main_on)
+    # ret.cruiseState.speedOffset = 0.
+    # if self.CP.carFingerprint == CAR.RAV4H:
+    #   # ignore standstill in hybrid rav4, since pcm allows to restart without
+    #   # receiving any special command
+    #   ret.cruiseState.standstill = False
+    # else:
+    #   ret.cruiseState.standstill = self.CS.pcm_acc_status == 7
 
     # TODO: button presses
     buttonEvents = []
@@ -208,7 +210,7 @@ class CarInterface(object):
     ret.doorOpen = not self.CS.door_all_closed
     ret.seatbeltUnlatched = not self.CS.seatbelt
 
-    ret.genericToggle = self.CS.generic_toggle
+    # ret.genericToggle = self.CS.generic_toggle
 
     # events
     events = []
@@ -218,36 +220,36 @@ class CarInterface(object):
         events.append(create_event('commIssue', [ET.NO_ENTRY, ET.IMMEDIATE_DISABLE]))
     else:
       self.can_invalid_count = 0
-    if not ret.gearShifter == 'drive' and self.CP.enableDsu:
+    if not ret.gearShifter == 'drive':
       events.append(create_event('wrongGear', [ET.NO_ENTRY, ET.SOFT_DISABLE]))
     if ret.doorOpen:
       events.append(create_event('doorOpen', [ET.NO_ENTRY, ET.SOFT_DISABLE]))
     if ret.seatbeltUnlatched:
       events.append(create_event('seatbeltNotLatched', [ET.NO_ENTRY, ET.SOFT_DISABLE]))
-    if self.CS.esp_disabled and self.CP.enableDsu:
-      events.append(create_event('espDisabled', [ET.NO_ENTRY, ET.SOFT_DISABLE]))
-    if not self.CS.main_on and self.CP.enableDsu:
-      events.append(create_event('wrongCarMode', [ET.NO_ENTRY, ET.USER_DISABLE]))
-    if ret.gearShifter == 'reverse' and self.CP.enableDsu:
-      events.append(create_event('reverseGear', [ET.NO_ENTRY, ET.IMMEDIATE_DISABLE]))
-    if self.CS.steer_error:
-      events.append(create_event('steerTempUnavailable', [ET.NO_ENTRY, ET.WARNING]))
-    if self.CS.low_speed_lockout and self.CP.enableDsu:
-      events.append(create_event('lowSpeedLockout', [ET.NO_ENTRY, ET.PERMANENT]))
-    if ret.vEgo < self.CP.minEnableSpeed and self.CP.enableDsu:
-      events.append(create_event('speedTooLow', [ET.NO_ENTRY]))
-      if c.actuators.gas > 0.1:
-        # some margin on the actuator to not false trigger cancellation while stopping
-        events.append(create_event('speedTooLow', [ET.IMMEDIATE_DISABLE]))
-      if ret.vEgo < 0.001:
-        # while in standstill, send a user alert
-        events.append(create_event('manualRestart', [ET.WARNING]))
+    # if self.CS.esp_disabled and self.CP.enableDsu:
+    #   events.append(create_event('espDisabled', [ET.NO_ENTRY, ET.SOFT_DISABLE]))
+    # if not self.CS.main_on and self.CP.enableDsu:
+    #   events.append(create_event('wrongCarMode', [ET.NO_ENTRY, ET.USER_DISABLE]))
+    # if ret.gearShifter == 'reverse' and self.CP.enableDsu:
+    #   events.append(create_event('reverseGear', [ET.NO_ENTRY, ET.IMMEDIATE_DISABLE]))
+    # if self.CS.steer_error:
+    #   events.append(create_event('steerTempUnavailable', [ET.NO_ENTRY, ET.WARNING]))
+    # if self.CS.low_speed_lockout and self.CP.enableDsu:
+    #   events.append(create_event('lowSpeedLockout', [ET.NO_ENTRY, ET.PERMANENT]))
+    # if ret.vEgo < self.CP.minEnableSpeed and self.CP.enableDsu:
+    #   events.append(create_event('speedTooLow', [ET.NO_ENTRY]))
+    #   if c.actuators.gas > 0.1:
+    #     # some margin on the actuator to not false trigger cancellation while stopping
+    #     events.append(create_event('speedTooLow', [ET.IMMEDIATE_DISABLE]))
+    #   if ret.vEgo < 0.001:
+    #     # while in standstill, send a user alert
+    #     events.append(create_event('manualRestart', [ET.WARNING]))
 
     # enable request in prius is simple, as we activate when Toyota is active (rising edge)
-    if ret.cruiseState.enabled and not self.cruise_enabled_prev:
-      events.append(create_event('pcmEnable', [ET.ENABLE]))
-    elif not ret.cruiseState.enabled:
-      events.append(create_event('pcmDisable', [ET.USER_DISABLE]))
+    # if ret.cruiseState.enabled and not self.cruise_enabled_prev:
+    #   events.append(create_event('pcmEnable', [ET.ENABLE]))
+    # elif not ret.cruiseState.enabled:
+    #   events.append(create_event('pcmDisable', [ET.USER_DISABLE]))
 
     # disable on pedals rising edge or when brake is pressed and speed isn't zero
     if (ret.gasPressed and not self.gas_pressed_prev) or \
@@ -269,9 +271,9 @@ class CarInterface(object):
   # pass in a car.CarControl
   # to be called @ 100hz
   def apply(self, c):
-    self.CC.update(self.sendcan, c.enabled, self.CS, self.frame,
-                   c.actuators, c.cruiseControl.cancel, c.hudControl.visualAlert,
-                   c.hudControl.audibleAlert)
+    # self.CC.update(self.sendcan, c.enabled, self.CS, self.frame,
+    #                c.actuators, c.cruiseControl.cancel, c.hudControl.visualAlert,
+    #                c.hudControl.audibleAlert)
 
     self.frame += 1
     return False

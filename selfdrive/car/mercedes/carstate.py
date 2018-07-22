@@ -5,8 +5,6 @@ from common.kalman.simple_kalman import KF1D
 import numpy as np
 
 def parse_gear_shifter(can_gear):
-  # TODO: Use values from DBC to parse this field
-
   #   if can_gear == 0x20:
   #     return "park"
   #   elif can_gear == 0x10:
@@ -26,13 +24,13 @@ def parse_gear_shifter(can_gear):
 def get_can_parser(CP):
   signals = [
     # sig_name, sig_address, default
-    ("GEAR", "GEAR_PACKET", 0), # TODOO: find signal
+    # ("GEAR", "GEAR_PACKET", 0), # TODOO: find signal
     ("DRIVER_BRAKE", "BRAKE_MODULE", 0),
     ("GAS_PEDAL", "GAS_PEDAL", 0),
-    ("WHEEL_SPEED_FL", "WHEEL_SPEEDS", 0),
-    ("WHEEL_SPEED_FR", "WHEEL_SPEEDS", 0),
-    ("WHEEL_SPEED_RL", "WHEEL_SPEEDS", 0),
-    ("WHEEL_SPEED_RR", "WHEEL_SPEEDS", 0),
+    # ("WHEEL_SPEED_FL", "WHEEL_SPEEDS", 0),
+    # ("WHEEL_SPEED_FR", "WHEEL_SPEEDS", 0),
+    # ("WHEEL_SPEED_RL", "WHEEL_SPEEDS", 0),
+    # ("WHEEL_SPEED_RR", "WHEEL_SPEEDS", 0),
     ("DOOR_OPEN_FL", "DOOR_SENSORS", 1),
     ("DOOR_OPEN_FR", "DOOR_SENSORS", 1),
     ("DOOR_OPEN_RL", "DOOR_SENSORS", 1),
@@ -41,16 +39,16 @@ def get_can_parser(CP):
     # ("TC_DISABLED", "ESP_CONTROL", 1),
     ("STEER_ANGLE", "STEER_SENSOR", 0),
     # ("STEER_FRACTION", "STEER_ANGLE_SENSOR", 0),
-    ("STEER_RATE", "STEER_ANGLE_SENSOR", 0),
+    ("STEER_RATE", "STEER_SENSOR", 0),
     # ("GAS_RELEASED", "PCM_CRUISE", 0),
     # ("CRUISE_STATE", "PCM_CRUISE", 0),
-    ("MAIN_ON", "PCM_CRUISE_2", 0),
+    # ("MAIN_ON", "PCM_CRUISE_2", 0),
     # ("SET_SPEED", "PCM_CRUISE_2", 0),
     # ("LOW_SPEED_LOCKOUT", "PCM_CRUISE_2", 0),
     # ("STEER_TORQUE_DRIVER", "STEER_TORQUE_SENSOR", 0),
     # ("STEER_TORQUE_EPS", "STEER_TORQUE_SENSOR", 0),
-    ("DRIVER_CONTROLS", "LEFT_BLINKER", 0),
-    ("DRIVER_CONTROLS", "RIGHT_BLINKER", 0),
+    ("LEFT_BLINKER", "DRIVER_CONTROLS", 0),
+    ("RIGHT_BLINKER", "DRIVER_CONTROLS", 0),
     # ("IPAS_STATE", "EPS_STATUS", 1),
     # ("BRAKE_LIGHTS_ACC", "ESP_CONTROL", 0),
     # ("AUTO_HIGH_BEAM", "LIGHT_STALK", 0),
@@ -93,7 +91,7 @@ class CarState(object):
                                     cp.vl["DOOR_SENSORS"]['DOOR_OPEN_RL'], cp.vl["DOOR_SENSORS"]['DOOR_OPEN_RR']])
     self.seatbelt = cp.vl["SEATBELT_SENSORS"]['SEATBELT_DRIVER_LATCHED']
 
-    can_gear = cp.vl["GEAR_PACKET"]['GEAR']
+    # can_gear = cp.vl["GEAR_PACKET"]['GEAR']
     self.brake_pressed = cp.vl["BRAKE_MODULE"]['DRIVER_BRAKE']
     self.pedal_gas = cp.vl["GAS_PEDAL"]['GAS_PEDAL']
     self.car_gas = self.pedal_gas
@@ -101,10 +99,14 @@ class CarState(object):
 
     # TODOO: find wheel speed signals, not wheel encoders
     # calc best v_ego estimate, by averaging two opposite corners
-    self.v_wheel_fl = cp.vl["WHEEL_SPEEDS"]['WHEEL_SPEED_FL'] * CV.KPH_TO_MS
-    self.v_wheel_fr = cp.vl["WHEEL_SPEEDS"]['WHEEL_SPEED_FR'] * CV.KPH_TO_MS
-    self.v_wheel_rl = cp.vl["WHEEL_SPEEDS"]['WHEEL_SPEED_RL'] * CV.KPH_TO_MS
-    self.v_wheel_rr = cp.vl["WHEEL_SPEEDS"]['WHEEL_SPEED_RR'] * CV.KPH_TO_MS
+    # self.v_wheel_fl = cp.vl["WHEEL_SPEEDS"]['WHEEL_SPEED_FL'] * CV.KPH_TO_MS
+    # self.v_wheel_fr = cp.vl["WHEEL_SPEEDS"]['WHEEL_SPEED_FR'] * CV.KPH_TO_MS
+    # self.v_wheel_rl = cp.vl["WHEEL_SPEEDS"]['WHEEL_SPEED_RL'] * CV.KPH_TO_MS
+    # self.v_wheel_rr = cp.vl["WHEEL_SPEEDS"]['WHEEL_SPEED_RR'] * CV.KPH_TO_MS
+    self.v_wheel_fl = 5
+    self.v_wheel_fr = 5
+    self.v_wheel_rl = 5
+    self.v_wheel_rr = 5
     self.v_wheel = float(np.mean([self.v_wheel_fl, self.v_wheel_fr, self.v_wheel_rl, self.v_wheel_rr]))
 
     # Kalman filter
@@ -119,13 +121,14 @@ class CarState(object):
 
     self.angle_steers = cp.vl["STEER_SENSOR"]['STEER_ANGLE']
     self.angle_steers_rate = cp.vl["STEER_SENSOR"]['STEER_RATE']
-    self.gear_shifter = parse_gear_shifter(can_gear)
+    # self.gear_shifter = parse_gear_shifter(can_gear)
+    self.gear_shifter = "drive"
     # self.main_on = cp.vl["PCM_CRUISE_2"]['MAIN_ON']
-    self.left_blinker_on = cp.vl["DRIVER_CONTROLS"]['LEFT_BLINKER'] == 1
-    self.left_blinker_on = cp.vl["DRIVER_CONTROLS"]['RIGHT_BLINKER'] == 1
+    self.left_blinker_on = not cp.vl["DRIVER_CONTROLS"]['LEFT_BLINKER']
+    self.right_blinker_on = not cp.vl["DRIVER_CONTROLS"]['RIGHT_BLINKER']
 
     # we could use the override bit from dbc, but it's triggered at too high torque values
-    self.steer_override = abs(cp.vl["STEER_TORQUE_SENSOR"]['STEER_TORQUE_DRIVER']) > 100
+    # self.steer_override = abs(cp.vl["STEER_TORQUE_SENSOR"]['STEER_TORQUE_DRIVER']) > 100
     # 2 is standby, 10 is active. TODO: check that everything else is really a faulty state
     # self.steer_state = cp.vl["EPS_STATUS"]['LKA_STATE']
     # self.steer_error = cp.vl["EPS_STATUS"]['LKA_STATE'] not in [1, 5]
@@ -135,10 +138,10 @@ class CarState(object):
     # self.steer_torque_motor = cp.vl["STEER_TORQUE_SENSOR"]['STEER_TORQUE_EPS']
 
     self.user_brake = 0
-    self.v_cruise_pcm = cp.vl["PCM_CRUISE_2"]['SET_SPEED']
+    # self.v_cruise_pcm = cp.vl["PCM_CRUISE_2"]['SET_SPEED']
     # self.pcm_acc_status = cp.vl["PCM_CRUISE"]['CRUISE_STATE']
     self.cc_status = 0
     # self.gas_pressed = not cp.vl["PCM_CRUISE"]['GAS_RELEASED']
     self.gas_pressed = True
-    self.brake_lights = self.brake_pressed
+    self.brake_lights = self.brake_pressed > 0
     # self.generic_toggle = bool(cp.vl["LIGHT_STALK"]['AUTO_HIGH_BEAM'])
