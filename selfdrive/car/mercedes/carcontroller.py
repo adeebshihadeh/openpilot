@@ -1,10 +1,9 @@
 from common.numpy_fast import clip, interp
 from selfdrive.boardd.boardd import can_list_to_can_capnp
-from selfdrive.car.toyota.toyotacan import make_can_msg, create_video_target,\
-                                           create_steer_command, create_ui_command, \
-                                           create_ipas_steer_command, create_accel_command, \
-                                           create_fcw_command
-from selfdrive.car.toyota.values import ECU, STATIC_MSGS
+from selfdrive.car.mercedes.mercedescan import make_can_msg, create_steer_command, \
+                                           create_ui_command, create_accel_command, \
+                                           create_ipas_steer_command
+from selfdrive.car.mercedes.values import STATIC_MSGS
 from selfdrive.can.packer import CANPacker
 
 # Accel limits
@@ -33,7 +32,6 @@ TARGET_IDS = [0x340, 0x341, 0x342, 0x343, 0x344, 0x345,
 
 
 def accel_hysteresis(accel, accel_steady, enabled):
-
   # for small accel oscillations within ACCEL_HYST_GAP, don't change the accel command
   if not enabled:
     # send 0 when disabled, otherwise acc faults
@@ -47,53 +45,53 @@ def accel_hysteresis(accel, accel_steady, enabled):
   return accel, accel_steady
 
 
-def process_hud_alert(hud_alert, audible_alert):
-  # initialize to no alert
-  steer = 0
-  fcw = 0
-  sound1 = 0
-  sound2 = 0
+# def process_hud_alert(hud_alert, audible_alert):
+#   # initialize to no alert
+#   steer = 0
+#   fcw = 0
+#   sound1 = 0
+#   sound2 = 0
 
-  if hud_alert == 'fcw':
-    fcw = 1
-  elif hud_alert == 'steerRequired':
-    steer = 1
+#   if hud_alert == 'fcw':
+#     fcw = 1
+#   elif hud_alert == 'steerRequired':
+#     steer = 1
 
-  if audible_alert == 'chimeRepeated':
-    sound1 = 1
-  elif audible_alert in ['beepSingle', 'chimeSingle', 'chimeDouble']:
-    # TODO: find a way to send single chimes
-    sound2 = 1
+#   if audible_alert == 'chimeRepeated':
+#     sound1 = 1
+#   elif audible_alert in ['beepSingle', 'chimeSingle', 'chimeDouble']:
+#     # TODO: find a way to send single chimes
+#     sound2 = 1
 
-  return steer, fcw, sound1, sound2
+#   return steer, fcw, sound1, sound2
 
 
-def ipas_state_transition(steer_angle_enabled, enabled, ipas_active, ipas_reset_counter):
+# def ipas_state_transition(steer_angle_enabled, enabled, ipas_active, ipas_reset_counter):
 
-  if enabled and not steer_angle_enabled:
-    #ipas_reset_counter = max(0, ipas_reset_counter - 1)
-    #if ipas_reset_counter == 0:
-    #  steer_angle_enabled = True
-    #else:
-    #  steer_angle_enabled = False
-    #return steer_angle_enabled, ipas_reset_counter
-    return True, 0
+#   if enabled and not steer_angle_enabled:
+#     #ipas_reset_counter = max(0, ipas_reset_counter - 1)
+#     #if ipas_reset_counter == 0:
+#     #  steer_angle_enabled = True
+#     #else:
+#     #  steer_angle_enabled = False
+#     #return steer_angle_enabled, ipas_reset_counter
+#     return True, 0
 
-  elif enabled and steer_angle_enabled:
-    if steer_angle_enabled and not ipas_active:
-      ipas_reset_counter += 1
-    else:
-      ipas_reset_counter = 0
-    if ipas_reset_counter > 10:  # try every 0.1s
-      steer_angle_enabled = False
-    return steer_angle_enabled, ipas_reset_counter
+#   elif enabled and steer_angle_enabled:
+#     if steer_angle_enabled and not ipas_active:
+#       ipas_reset_counter += 1
+#     else:
+#       ipas_reset_counter = 0
+#     if ipas_reset_counter > 10:  # try every 0.1s
+#       steer_angle_enabled = False
+#     return steer_angle_enabled, ipas_reset_counter
 
-  else:
-    return False, 0
+#   else:
+#     return False, 0
 
 
 class CarController(object):
-  def __init__(self, dbc_name, car_fingerprint, enable_camera, enable_dsu, enable_apg):
+  def __init__(self, dbc_name, car_fingerprint):
     self.braking = False
     # redundant safety check with the board
     self.controls_allowed = True
@@ -121,7 +119,7 @@ class CarController(object):
 
     # *** compute control surfaces ***
 
-    # gas and brake
+    # gas and brake   
     apply_accel = actuators.gas - actuators.brake
     apply_accel, self.accel_steady = accel_hysteresis(apply_accel, self.accel_steady, enabled)
     apply_accel = clip(apply_accel * ACCEL_SCALE, ACCEL_MIN, ACCEL_MAX)
@@ -146,8 +144,8 @@ class CarController(object):
     if not enabled or CS.steer_state in [9, 25]:
       apply_steer = 0
 
-    self.steer_angle_enabled, self.ipas_reset_counter = \
-      ipas_state_transition(self.steer_angle_enabled, enabled, CS.ipas_active, self.ipas_reset_counter)
+    # self.steer_angle_enabled, self.ipas_reset_counter = \
+    #   ipas_state_transition(self.steer_angle_enabled, enabled, CS.ipas_active, self.ipas_reset_counter)
     #print self.steer_angle_enabled, self.ipas_reset_counter, CS.ipas_active
 
     # steer angle
@@ -209,14 +207,10 @@ class CarController(object):
       else:
         can_sends.append(create_accel_command(self.packer, 0, pcm_cancel_cmd, False))
 
-    if frame % 10 == 0 and ECU.CAM in self.fake_ecus:
-      for addr in TARGET_IDS:
-        can_sends.append(create_video_target(frame/10, addr))
-
     # ui mesg is at 100Hz but we send asap if:
     # - there is something to display
     # - there is something to stop displaying
-    alert_out = process_hud_alert(hud_alert, audible_alert)
+    # alert_out = process_hud_alert(hud_alert, audible_alert)
     steer, fcw, sound1, sound2 = alert_out
 
     if (any(alert_out) and not self.alert_active) or \

@@ -4,12 +4,12 @@ from cereal import car
 from selfdrive.config import Conversions as CV
 from selfdrive.controls.lib.drive_helpers import EventTypes as ET, create_event
 from selfdrive.controls.lib.vehicle_model import VehicleModel
-from selfdrive.car.toyota.carstate import CarState, get_can_parser
-from selfdrive.car.toyota.values import ECU, check_ecu_msgs, CAR
+from selfdrive.car.mercedes.carstate import CarState, get_can_parser
+from selfdrive.car.mercedes.values import CAR
 from selfdrive.swaglog import cloudlog
 
 try:
-  from selfdrive.car.toyota.carcontroller import CarController
+  from selfdrive.car.mercedes.carcontroller import CarController
 except ImportError:
   CarController = None
 
@@ -33,7 +33,7 @@ class CarInterface(object):
     # sending if read only is False
     if sendcan is not None:
       self.sendcan = sendcan
-      self.CC = CarController(self.cp.dbc_name, CP.carFingerprint, CP.enableCamera, CP.enableDsu, CP.enableApgs)
+      self.CC = CarController(self.cp.dbc_name, CP.carFingerprint)
 
   @staticmethod
   def compute_gb(accel, speed):
@@ -45,7 +45,6 @@ class CarInterface(object):
 
   @staticmethod
   def get_params(candidate, fingerprint):
-
     # kg of standard extra cargo to count for drive, gas, etc...
     std_cargo = 136
 
@@ -55,7 +54,7 @@ class CarInterface(object):
     ret.carFingerprint = candidate
 
     # TODOO: make mercedes safety model
-    ret.safetyModel = car.CarParams.SafetyModels.toyota
+    ret.safetyModel = car.CarParams.SafetyModels.mercedes
 
     # pedal
     ret.enableCruise = True
@@ -121,13 +120,6 @@ class CarInterface(object):
     ret.gasMaxV = [0.5]
     ret.brakeMaxBP = [5., 20.]
     ret.brakeMaxV = [1., 0.8]
-
-    ret.enableCamera = not check_ecu_msgs(fingerprint, candidate, ECU.CAM)
-    ret.enableDsu = not check_ecu_msgs(fingerprint, candidate, ECU.DSU)
-    ret.enableApgs = False #not check_ecu_msgs(fingerprint, candidate, ECU.APGS)
-    cloudlog.warn("ECU Camera Simulated: %r", ret.enableCamera)
-    cloudlog.warn("ECU DSU Simulated: %r", ret.enableDsu)
-    cloudlog.warn("ECU APGS Simulated: %r", ret.enableApgs)
 
     ret.steerLimitAlert = False
     ret.stoppingControl = False
@@ -277,7 +269,6 @@ class CarInterface(object):
   # pass in a car.CarControl
   # to be called @ 100hz
   def apply(self, c):
-
     self.CC.update(self.sendcan, c.enabled, self.CS, self.frame,
                    c.actuators, c.cruiseControl.cancel, c.hudControl.visualAlert,
                    c.hudControl.audibleAlert)
