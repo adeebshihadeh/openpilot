@@ -124,8 +124,8 @@ class CarState(object):
     # self.gear_shifter = parse_gear_shifter(can_gear)
     self.gear_shifter = "drive"
     # self.main_on = cp.vl["PCM_CRUISE_2"]['MAIN_ON']
-    self.left_blinker_on = not cp.vl["DRIVER_CONTROLS"]['LEFT_BLINKER']
-    self.right_blinker_on = not cp.vl["DRIVER_CONTROLS"]['RIGHT_BLINKER']
+    self.left_blinker_on = cp.vl["DRIVER_CONTROLS"]['LEFT_BLINKER']
+    self.right_blinker_on = cp.vl["DRIVER_CONTROLS"]['RIGHT_BLINKER']
 
     # we could use the override bit from dbc, but it's triggered at too high torque values
     # self.steer_override = abs(cp.vl["STEER_TORQUE_SENSOR"]['STEER_TORQUE_DRIVER']) > 100
