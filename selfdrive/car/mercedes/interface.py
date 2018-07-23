@@ -208,7 +208,7 @@ class CarInterface(object):
     ret.rightBlinker = bool(self.CS.right_blinker_on)
 
     ret.doorOpen = not self.CS.door_all_closed
-    ret.seatbeltUnlatched = not self.CS.seatbelt
+    ret.seatbeltUnlatched = bool(self.CS.seatbelt)
 
     # ret.genericToggle = self.CS.generic_toggle
 
