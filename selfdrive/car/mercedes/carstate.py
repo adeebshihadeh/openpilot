@@ -47,7 +47,7 @@ def get_can_parser(CP):
     ("RIGHT_BLINKER", "DRIVER_CONTROLS", 0),
     # ("IPAS_STATE", "EPS_STATUS", 1),
     # ("BRAKE_LIGHTS_ACC", "ESP_CONTROL", 0),
-    # ("AUTO_HIGH_BEAM", "LIGHT_STALK", 0),
+    ("HIGHBEAM_TOGGLE", "DRIVER_CONTROLS", 0),
   ]
 
   checks = []
@@ -138,4 +138,4 @@ class CarState(object):
     # self.gas_pressed = not cp.vl["PCM_CRUISE"]['GAS_RELEASED']
     self.gas_pressed = True
     self.brake_lights = self.brake_pressed > 0
-    # self.generic_toggle = bool(cp.vl["LIGHT_STALK"]['AUTO_HIGH_BEAM'])
+    self.generic_toggle = bool(cp.vl["DRIVER_CONTROLS"]['HIGHBEAM_TOGGLE'])
