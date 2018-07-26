@@ -73,16 +73,13 @@ class CarInterface(object):
     ret.steerKiBP, ret.steerKpBP = [[0.], [0.]]
     ret.steerActuatorDelay = 0.12  # Default delay, Prius has larger delay
 
-    if candidate == CAR.ECLASS:
-      ret.safetyParam = 66  # see conversion factor for STEER_TORQUE_EPS in dbc file
-      ret.wheelbase = 2.70
-      ret.steerRatio = 15.59   # unknown end-to-end spec
-      tire_stiffness_factor = 0.7933
-      ret.mass = 3045 * CV.LB_TO_KG + std_cargo
-      ret.steerKpV, ret.steerKiV = [[0.4], [0.01]]
-      ret.steerKf = 0.00006   # full torque for 10 deg at 80mph means 0.00007818594
-      # TODO: Prius seem to have very laggy actuators. Understand if it is lag or hysteresis
-      ret.steerActuatorDelay = 0.25
+    ret.safetyParam = 66  # see conversion factor for STEER_TORQUE_EPS in dbc file
+    ret.wheelbase = 2.77
+    ret.steerRatio = 15.59   # unknown end-to-end spec
+    tire_stiffness_factor = 0.7933
+    ret.mass = 3585 * CV.LB_TO_KG + std_cargo
+    ret.steerKpV, ret.steerKiV = [[0.4], [0.01]]
+    ret.steerKf = 0.00006   # full torque for 10 deg at 80mph means 0.00007818594
 
     ret.steerRateCost = 1.
     ret.centerToFront = ret.wheelbase * 0.44
@@ -177,8 +174,7 @@ class CarInterface(object):
 
     # cruise state
     # ret.cruiseState.enabled = self.CS.pcm_acc_status != 0
-    ret.cruiseState.enabled = False
-    # ret.cruiseState.speed = self.CS.v_cruise_pcm * CV.KPH_TO_MS
+    ret.cruiseState.speed = self.CS.v_cruise
     # ret.cruiseState.available = bool(self.CS.main_on)
     # ret.cruiseState.speedOffset = 0.
     # if self.CP.carFingerprint == CAR.RAV4H:
@@ -210,7 +206,7 @@ class CarInterface(object):
     ret.doorOpen = not self.CS.door_all_closed
     ret.seatbeltUnlatched = bool(self.CS.seatbelt)
 
-    # ret.genericToggle = self.CS.generic_toggle
+    ret.genericToggle = self.CS.generic_toggle
 
     # events
     events = []

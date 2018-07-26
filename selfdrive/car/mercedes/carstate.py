@@ -13,7 +13,7 @@ def parse_gear_shifter(can_gear):
     return "neutral"
   elif can_gear == 0x5:
     return "drive"
-  
+
   return "unknown"
 
 
@@ -23,10 +23,10 @@ def get_can_parser(CP):
     ("GEAR", "GEAR_PACKET", 0),
     ("DRIVER_BRAKE", "BRAKE_MODULE", 0),
     ("GAS_PEDAL", "GAS_PEDAL", 0),
-    # ("WHEEL_SPEED_FL", "WHEEL_SPEEDS", 0),
-    # ("WHEEL_SPEED_FR", "WHEEL_SPEEDS", 0),
-    # ("WHEEL_SPEED_RL", "WHEEL_SPEEDS", 0),
-    # ("WHEEL_SPEED_RR", "WHEEL_SPEEDS", 0),
+    # ("WHEEL_ENCODER_FL", "WHEEL_ENCODERS", 0),
+    # ("WHEEL_ENCODER_FR", "WHEEL_ENCODERS", 0),
+    # ("WHEEL_ENCODER_RL", "WHEEL_ENCODERS", 0),
+    # ("WHEEL_ENCODER_RR", "WHEEL_ENCODERS", 0),
     ("DOOR_OPEN_FL", "DOOR_SENSORS", 1),
     ("DOOR_OPEN_FR", "DOOR_SENSORS", 1),
     ("DOOR_OPEN_RL", "DOOR_SENSORS", 1),
@@ -34,12 +34,11 @@ def get_can_parser(CP):
     ("SEATBELT_DRIVER_LATCHED", "SEATBELT_SENSORS", 1),
     # ("TC_DISABLED", "ESP_CONTROL", 1),
     ("STEER_ANGLE", "STEER_SENSOR", 0),
-    # ("STEER_FRACTION", "STEER_ANGLE_SENSOR", 0),
     ("STEER_RATE", "STEER_SENSOR", 0),
     # ("GAS_RELEASED", "PCM_CRUISE", 0),
     # ("CRUISE_STATE", "PCM_CRUISE", 0),
     # ("MAIN_ON", "PCM_CRUISE_2", 0),
-    # ("SET_SPEED", "PCM_CRUISE_2", 0),
+    ("CRUISE_SET_SPEED", "CRUISE_CONTROL3", 0),
     # ("LOW_SPEED_LOCKOUT", "PCM_CRUISE_2", 0),
     # ("STEER_TORQUE_DRIVER", "STEER_TORQUE_SENSOR", 0),
     # ("STEER_TORQUE_EPS", "STEER_TORQUE_SENSOR", 0),
@@ -74,6 +73,10 @@ class CarState(object):
                          K=np.matrix([[0.12287673], [0.29666309]]))
     self.v_ego = 0.0
 
+    # TODOO: stop using gps. find wheel speed on can
+    self.gps = messaging.sub_sock(context, service_list['gpsLocation'].port)
+    self.speed = 0
+
   def update(self, cp):
     # copy can_valid
     self.can_valid = cp.can_valid
@@ -98,10 +101,16 @@ class CarState(object):
     # self.v_wheel_fr = cp.vl["WHEEL_SPEEDS"]['WHEEL_SPEED_FR'] * CV.KPH_TO_MS
     # self.v_wheel_rl = cp.vl["WHEEL_SPEEDS"]['WHEEL_SPEED_RL'] * CV.KPH_TO_MS
     # self.v_wheel_rr = cp.vl["WHEEL_SPEEDS"]['WHEEL_SPEED_RR'] * CV.KPH_TO_MS
-    self.v_wheel_fl = 5
-    self.v_wheel_fr = 5
-    self.v_wheel_rl = 5
-    self.v_wheel_rr = 5
+
+    gps = messaging.recv_sock(self.gps)
+    if gps is not None:
+      self.speed = gps.gpsLocation.speed
+
+    self.v_wheel_fl = self.speed
+    self.v_wheel_fr = self.speed
+    self.v_wheel_rl = self.speed
+    self.v_wheel_rr = self.speed
+
     self.v_wheel = float(np.mean([self.v_wheel_fl, self.v_wheel_fr, self.v_wheel_rl, self.v_wheel_rr]))
 
     # Kalman filter
@@ -121,20 +130,13 @@ class CarState(object):
     self.left_blinker_on = cp.vl["DRIVER_CONTROLS"]['LEFT_BLINKER']
     self.right_blinker_on = cp.vl["DRIVER_CONTROLS"]['RIGHT_BLINKER']
 
-    # we could use the override bit from dbc, but it's triggered at too high torque values
-    # self.steer_override = abs(cp.vl["STEER_TORQUE_SENSOR"]['STEER_TORQUE_DRIVER']) > 100
-    # 2 is standby, 10 is active. TODO: check that everything else is really a faulty state
-    # self.steer_state = cp.vl["EPS_STATUS"]['LKA_STATE']
-    # self.steer_error = cp.vl["EPS_STATUS"]['LKA_STATE'] not in [1, 5]
-    # self.ipas_active = cp.vl['EPS_STATUS']['IPAS_STATE'] == 3
     self.brake_error = 0
     # self.steer_torque_driver = cp.vl["STEER_TORQUE_SENSOR"]['STEER_TORQUE_DRIVER']
     # self.steer_torque_motor = cp.vl["STEER_TORQUE_SENSOR"]['STEER_TORQUE_EPS']
 
     self.user_brake = 0
-    # self.v_cruise_pcm = cp.vl["PCM_CRUISE_2"]['SET_SPEED']
+    self.v_cruise = cp.vl["CRUISE_CONTROL3"]['CRUISE_SET_SPEED'] * CV.MPH_TO_MS
     # self.pcm_acc_status = cp.vl["PCM_CRUISE"]['CRUISE_STATE']
-    self.cc_status = 0
     # self.gas_pressed = not cp.vl["PCM_CRUISE"]['GAS_RELEASED']
     self.gas_pressed = True
     self.brake_lights = self.brake_pressed > 0
