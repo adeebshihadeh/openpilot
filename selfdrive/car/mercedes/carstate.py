@@ -4,6 +4,10 @@ from selfdrive.config import Conversions as CV
 from common.kalman.simple_kalman import KF1D
 import numpy as np
 
+import zmq
+import selfdrive.messaging as messaging
+from selfdrive.services import service_list
+
 def parse_gear_shifter(can_gear):
   if can_gear == 0x8:
     return "park"
@@ -36,7 +40,7 @@ def get_can_parser(CP):
     ("STEER_ANGLE", "STEER_SENSOR", 0),
     ("STEER_RATE", "STEER_SENSOR", 0),
     # ("GAS_RELEASED", "PCM_CRUISE", 0),
-    # ("CRUISE_STATE", "PCM_CRUISE", 0),
+    ("CRUISE_DISABLED", "CRUISE_CONTROL3", 0),
     # ("MAIN_ON", "PCM_CRUISE_2", 0),
     ("CRUISE_SET_SPEED", "CRUISE_CONTROL3", 0),
     # ("LOW_SPEED_LOCKOUT", "PCM_CRUISE_2", 0),
@@ -74,6 +78,7 @@ class CarState(object):
     self.v_ego = 0.0
 
     # TODOO: stop using gps. find wheel speed on can
+    context = zmq.Context()
     self.gps = messaging.sub_sock(context, service_list['gpsLocation'].port)
     self.speed = 0
 
@@ -91,7 +96,7 @@ class CarState(object):
 
     can_gear = cp.vl["GEAR_PACKET"]['GEAR']
     self.brake_pressed = cp.vl["BRAKE_MODULE"]['DRIVER_BRAKE']
-    self.pedal_gas = cp.vl["GAS_PEDAL"]['GAS_PEDAL']
+    self.pedal_gas = cp.vl["GAS_PEDAL"]['GAS_PEDAL'] / 256.0
     self.car_gas = self.pedal_gas
     # self.esp_disabled = cp.vl["ESP_CONTROL"]['TC_DISABLED']
 
@@ -131,13 +136,12 @@ class CarState(object):
     self.right_blinker_on = cp.vl["DRIVER_CONTROLS"]['RIGHT_BLINKER']
 
     self.brake_error = 0
-    # self.steer_torque_driver = cp.vl["STEER_TORQUE_SENSOR"]['STEER_TORQUE_DRIVER']
-    # self.steer_torque_motor = cp.vl["STEER_TORQUE_SENSOR"]['STEER_TORQUE_EPS']
-
     self.user_brake = 0
+
     self.v_cruise = cp.vl["CRUISE_CONTROL3"]['CRUISE_SET_SPEED'] * CV.MPH_TO_MS
+    self.cruise_enabled = not cp.vl["CRUISE_CONTROL3"]['CRUISE_DISABLED']
     # self.pcm_acc_status = cp.vl["PCM_CRUISE"]['CRUISE_STATE']
     # self.gas_pressed = not cp.vl["PCM_CRUISE"]['GAS_RELEASED']
-    self.gas_pressed = True
+    self.gas_pressed = self.pedal_gas > 0
     self.brake_lights = self.brake_pressed > 0
     self.generic_toggle = bool(cp.vl["DRIVER_CONTROLS"]['HIGHBEAM_TOGGLE'])

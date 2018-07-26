@@ -173,10 +173,10 @@ class CarInterface(object):
     # ret.steeringPressed = self.CS.steer_override
 
     # cruise state
-    # ret.cruiseState.enabled = self.CS.pcm_acc_status != 0
+    ret.cruiseState.enabled = self.CS.cruise_enabled
     ret.cruiseState.speed = self.CS.v_cruise
     # ret.cruiseState.available = bool(self.CS.main_on)
-    # ret.cruiseState.speedOffset = 0.
+    ret.cruiseState.speedOffset = 0.
     # if self.CP.carFingerprint == CAR.RAV4H:
     #   # ignore standstill in hybrid rav4, since pcm allows to restart without
     #   # receiving any special command
