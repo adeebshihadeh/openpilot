@@ -5,26 +5,22 @@ from common.kalman.simple_kalman import KF1D
 import numpy as np
 
 def parse_gear_shifter(can_gear):
-  #   if can_gear == 0x20:
-  #     return "park"
-  #   elif can_gear == 0x10:
-  #     return "reverse"
-  #   elif can_gear == 0x8:
-  #     return "neutral"
-  #   elif can_gear == 0x0:
-  #     return "drive"
-  #   elif can_gear == 0x1:
-  #     return "sport"
-
-  # return "unknown"
-
-  return "drive"
+  if can_gear == 0x8:
+    return "park"
+  elif can_gear == 0x7:
+    return "reverse"
+  elif can_gear == 0x6:
+    return "neutral"
+  elif can_gear == 0x5:
+    return "drive"
+  
+  return "unknown"
 
 
 def get_can_parser(CP):
   signals = [
     # sig_name, sig_address, default
-    # ("GEAR", "GEAR_PACKET", 0), # TODOO: find signal
+    ("GEAR", "GEAR_PACKET", 0),
     ("DRIVER_BRAKE", "BRAKE_MODULE", 0),
     ("GAS_PEDAL", "GAS_PEDAL", 0),
     # ("WHEEL_SPEED_FL", "WHEEL_SPEEDS", 0),
@@ -61,7 +57,6 @@ def get_can_parser(CP):
 
 class CarState(object):
   def __init__(self, CP):
-
     self.CP = CP
     self.left_blinker_on = 0
     self.right_blinker_on = 0
@@ -91,7 +86,7 @@ class CarState(object):
                                     cp.vl["DOOR_SENSORS"]['DOOR_OPEN_RL'], cp.vl["DOOR_SENSORS"]['DOOR_OPEN_RR']])
     self.seatbelt = cp.vl["SEATBELT_SENSORS"]['SEATBELT_DRIVER_LATCHED']
 
-    # can_gear = cp.vl["GEAR_PACKET"]['GEAR']
+    can_gear = cp.vl["GEAR_PACKET"]['GEAR']
     self.brake_pressed = cp.vl["BRAKE_MODULE"]['DRIVER_BRAKE']
     self.pedal_gas = cp.vl["GAS_PEDAL"]['GAS_PEDAL']
     self.car_gas = self.pedal_gas
@@ -121,8 +116,7 @@ class CarState(object):
 
     self.angle_steers = cp.vl["STEER_SENSOR"]['STEER_ANGLE']
     self.angle_steers_rate = cp.vl["STEER_SENSOR"]['STEER_RATE']
-    # self.gear_shifter = parse_gear_shifter(can_gear)
-    self.gear_shifter = "drive"
+    self.gear_shifter = parse_gear_shifter(can_gear)
     # self.main_on = cp.vl["PCM_CRUISE_2"]['MAIN_ON']
     self.left_blinker_on = cp.vl["DRIVER_CONTROLS"]['LEFT_BLINKER']
     self.right_blinker_on = cp.vl["DRIVER_CONTROLS"]['RIGHT_BLINKER']
