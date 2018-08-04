@@ -39,6 +39,7 @@
 #define SAFETY_HONDA_BOSCH 4
 #define SAFETY_FORD 5
 #define SAFETY_CADILLAC 6
+#define SAFETY_MERCEDES 7
 #define SAFETY_TOYOTA_NOLIMITS 0x1336
 #define SAFETY_ALLOUTPUT 0x1337
 
@@ -114,7 +115,7 @@ void *safety_setter_thread(void *s) {
     safety_setting = SAFETY_CADILLAC;
     break;
   case (int)cereal::CarParams::SafetyModels::MERCEDES:
-    safety_setting = SAFETY_ALLOUTPUT;
+    safety_setting = SAFETY_MERCEDES;
     break;
   default:
     LOGE("unknown safety model: %d", safety_model);
