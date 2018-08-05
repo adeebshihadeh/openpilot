@@ -4,9 +4,9 @@ static void mercerdes_rx_hook(CAN_FIFOMailBox_TypeDef *to_push) {
   int bus_number = (to_push->RDTR >> 4) & 0xFF;
   uint32_t addr = to_push->RIR >> 21;
 
-  // this message isn't all zeros when ignition is on
-  if (addr == 0x203 && bus_number == 0) {
-    mercedes_ign = to_push->RDLR > 0;
+  // first 6 bytes in this message are 0xff when ignition is off
+  if (addr == 0x245 && bus_number == 0) {
+    mercedes_ign = to_push->RDLR != 0xffffffff;
   }
 
   // // enter controls on rising edge of ACC, exit controls on ACC off
@@ -38,7 +38,7 @@ static int mercedes_ign_hook() {
 const safety_hooks mercedes_hooks = {
   .init = mercedes_init,
   .rx = mercerdes_rx_hook,
-  .tx = mercerdes_tx_hook,
+  .tx = mercedes_tx_hook,
   .tx_lin = alloutput_tx_lin_hook,
   .ignition = mercedes_ign_hook,
   .fwd = alloutput_fwd_hook,
