@@ -280,7 +280,7 @@ def manager_init(should_register=True):
 
 def system(cmd):
   try:
-    cloudlog.info("running %s" % cmd)
+    #cloudlog.info("running %s" % cmd)
     subprocess.check_output(cmd, stderr=subprocess.STDOUT, shell=True)
   except subprocess.CalledProcessError as e:
     cloudlog.event("running failed",
@@ -339,7 +339,8 @@ def manager_thread():
 
     # check the status of all processes, did any of them die?
     for p in running:
-      cloudlog.debug("   running %s %s" % (p, running[p]))
+      pass
+      #cloudlog.debug("   running %s %s" % (p, running[p]))
 
     # is this still needed?
     if params.get("DoUninstall") == "1":
