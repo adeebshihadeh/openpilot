@@ -1,13 +1,19 @@
-int mercedes_ign = 0;
+uint16_t mercedes_ign = 0;
 
 static void mercerdes_rx_hook(CAN_FIFOMailBox_TypeDef *to_push) {
   int bus_number = (to_push->RDTR >> 4) & 0xFF;
   uint32_t addr = to_push->RIR >> 21;
 
+  controls_allowed = 1;
+
   // first 6 bytes in this message are 0xff when ignition is off
   if (addr == 0x245 && bus_number == 0) {
-    mercedes_ign = to_push->RDLR != 0xffffffff;
+    mercedes_ign = (mercedes_ign << 1) + (to_push->RDLR != 0xffffffff);
   }
+  // puth(mercedes_ign);
+  // puts("\n");
+  // puth(mercedes_ign > 0);
+  // puts("\n");
 
   // // enter controls on rising edge of ACC, exit controls on ACC off
   // if ((addr == 0x370) && (bus_number == 0)) {
@@ -27,12 +33,12 @@ static int mercedes_tx_hook(CAN_FIFOMailBox_TypeDef *to_send) {
 }
 
 static void mercedes_init(int16_t param) {
-  controls_allowed = 1;
+  controls_allowed = 0;
   mercedes_ign = 0;
 }
 
 static int mercedes_ign_hook() {
-  return mercedes_ign;
+  return mercedes_ign > 0;
 }
 
 const safety_hooks mercedes_hooks = {
