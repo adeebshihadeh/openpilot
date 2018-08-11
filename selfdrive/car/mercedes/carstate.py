@@ -4,10 +4,6 @@ from selfdrive.config import Conversions as CV
 from common.kalman.simple_kalman import KF1D
 import numpy as np
 
-import zmq
-import selfdrive.messaging as messaging
-from selfdrive.services import service_list
-
 def parse_gear_shifter(can_gear):
   if can_gear == 0x8:
     return "park"
@@ -27,10 +23,10 @@ def get_can_parser(CP):
     ("GEAR", "GEAR_PACKET", 0),
     ("DRIVER_BRAKE", "BRAKE_MODULE", 0),
     ("GAS_PEDAL", "GAS_PEDAL", 0),
-    # ("WHEEL_ENCODER_FL", "WHEEL_ENCODERS", 0),
-    # ("WHEEL_ENCODER_FR", "WHEEL_ENCODERS", 0),
-    # ("WHEEL_ENCODER_RL", "WHEEL_ENCODERS", 0),
-    # ("WHEEL_ENCODER_RR", "WHEEL_ENCODERS", 0),
+    ("WHEEL_SPEED_FL", "WHEEL_SPEEDS", 0),
+    ("WHEEL_SPEED_FR", "WHEEL_SPEEDS", 0),
+    ("WHEEL_SPEED_RL", "WHEEL_SPEEDS", 0),
+    ("WHEEL_SPEED_RR", "WHEEL_SPEEDS", 0),
     ("DOOR_OPEN_FL", "DOOR_SENSORS", 1),
     ("DOOR_OPEN_FR", "DOOR_SENSORS", 1),
     ("DOOR_OPEN_RL", "DOOR_SENSORS", 1),
@@ -77,11 +73,6 @@ class CarState(object):
                          K=np.matrix([[0.12287673], [0.29666309]]))
     self.v_ego = 0.0
 
-    # TODOO: stop using gps. find wheel speed on can
-    context = zmq.Context()
-    self.gps = messaging.sub_sock(context, service_list['gpsLocation'].port)
-    self.speed = 0
-
   def update(self, cp):
     # copy can_valid
     self.can_valid = cp.can_valid
@@ -102,19 +93,10 @@ class CarState(object):
 
     # TODOO: find wheel speed signals, not wheel encoders
     # calc best v_ego estimate, by averaging two opposite corners
-    # self.v_wheel_fl = cp.vl["WHEEL_SPEEDS"]['WHEEL_SPEED_FL'] * CV.KPH_TO_MS
-    # self.v_wheel_fr = cp.vl["WHEEL_SPEEDS"]['WHEEL_SPEED_FR'] * CV.KPH_TO_MS
-    # self.v_wheel_rl = cp.vl["WHEEL_SPEEDS"]['WHEEL_SPEED_RL'] * CV.KPH_TO_MS
-    # self.v_wheel_rr = cp.vl["WHEEL_SPEEDS"]['WHEEL_SPEED_RR'] * CV.KPH_TO_MS
-
-    gps = messaging.recv_sock(self.gps)
-    if gps is not None:
-      self.speed = gps.gpsLocation.speed
-
-    self.v_wheel_fl = self.speed
-    self.v_wheel_fr = self.speed
-    self.v_wheel_rl = self.speed
-    self.v_wheel_rr = self.speed
+    self.v_wheel_fl = cp.vl["WHEEL_SPEEDS"]['WHEEL_SPEED_FL'] * CV.MPH_TO_MS
+    self.v_wheel_fr = cp.vl["WHEEL_SPEEDS"]['WHEEL_SPEED_FR'] * CV.MPH_TO_MS
+    self.v_wheel_rl = cp.vl["WHEEL_SPEEDS"]['WHEEL_SPEED_RL'] * CV.MPH_TO_MS
+    self.v_wheel_rr = cp.vl["WHEEL_SPEEDS"]['WHEEL_SPEED_RR'] * CV.MPH_TO_MS
 
     self.v_wheel = float(np.mean([self.v_wheel_fl, self.v_wheel_fr, self.v_wheel_rl, self.v_wheel_rr]))
 
@@ -131,7 +113,7 @@ class CarState(object):
     self.angle_steers = cp.vl["STEER_SENSOR"]['STEER_ANGLE']
     self.angle_steers_rate = cp.vl["STEER_SENSOR"]['STEER_RATE']
     self.gear_shifter = parse_gear_shifter(can_gear)
-    # self.main_on = cp.vl["PCM_CRUISE_2"]['MAIN_ON']
+    self.main_on = 1
     self.left_blinker_on = cp.vl["DRIVER_CONTROLS"]['LEFT_BLINKER']
     self.right_blinker_on = cp.vl["DRIVER_CONTROLS"]['RIGHT_BLINKER']
 
