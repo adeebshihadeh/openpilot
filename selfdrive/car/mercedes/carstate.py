@@ -22,6 +22,8 @@ def get_can_parser(CP):
     # sig_name, sig_address, default
     ("GEAR", "GEAR_PACKET", 0),
     ("DRIVER_BRAKE", "BRAKE_MODULE", 0),
+    ("BRAKE_POSITION", "BRAKE_MODULE", 0),
+    ("COMBINED_GAS", "GAS_PEDAL", 0),
     ("GAS_PEDAL", "GAS_PEDAL", 0),
     ("WHEEL_SPEED_FL", "WHEEL_SPEEDS", 0),
     ("WHEEL_SPEED_FR", "WHEEL_SPEEDS", 0),
@@ -32,20 +34,12 @@ def get_can_parser(CP):
     ("DOOR_OPEN_RL", "DOOR_SENSORS", 1),
     ("DOOR_OPEN_RR", "DOOR_SENSORS", 1),
     ("SEATBELT_DRIVER_LATCHED", "SEATBELT_SENSORS", 1),
-    # ("TC_DISABLED", "ESP_CONTROL", 1),
     ("STEER_ANGLE", "STEER_SENSOR", 0),
     ("STEER_RATE", "STEER_SENSOR", 0),
-    # ("GAS_RELEASED", "PCM_CRUISE", 0),
     ("CRUISE_DISABLED", "CRUISE_CONTROL3", 0),
-    # ("MAIN_ON", "PCM_CRUISE_2", 0),
     ("CRUISE_SET_SPEED", "CRUISE_CONTROL3", 0),
-    # ("LOW_SPEED_LOCKOUT", "PCM_CRUISE_2", 0),
-    # ("STEER_TORQUE_DRIVER", "STEER_TORQUE_SENSOR", 0),
-    # ("STEER_TORQUE_EPS", "STEER_TORQUE_SENSOR", 0),
     ("LEFT_BLINKER", "DRIVER_CONTROLS", 0),
     ("RIGHT_BLINKER", "DRIVER_CONTROLS", 0),
-    # ("IPAS_STATE", "EPS_STATUS", 1),
-    # ("BRAKE_LIGHTS_ACC", "ESP_CONTROL", 0),
     ("HIGHBEAM_TOGGLE", "DRIVER_CONTROLS", 0),
   ]
 
@@ -86,12 +80,17 @@ class CarState(object):
     self.seatbelt = cp.vl["SEATBELT_SENSORS"]['SEATBELT_DRIVER_LATCHED']
 
     can_gear = cp.vl["GEAR_PACKET"]['GEAR']
-    self.brake_pressed = cp.vl["BRAKE_MODULE"]['DRIVER_BRAKE']
-    self.pedal_gas = cp.vl["GAS_PEDAL"]['GAS_PEDAL'] / 256.0
-    self.car_gas = self.pedal_gas
-    # self.esp_disabled = cp.vl["ESP_CONTROL"]['TC_DISABLED']
+    self.gear_shifter = parse_gear_shifter(can_gear)
 
-    # TODOO: find wheel speed signals, not wheel encoders
+    self.brake_pressed = cp.vl["BRAKE_MODULE"]['DRIVER_BRAKE']
+    brake_position = cp.vl["BRAKE_MODULE"]['BRAKE_POSITION'] / 1024.
+    self.user_brake = brake_position if self.brake_pressed else 0
+    self.brake_lights = brake_position > 0
+
+    self.pedal_gas = cp.vl["GAS_PEDAL"]['GAS_PEDAL'] / 256.0
+    self.car_gas = cp.vl["GAS_PEDAL"]['COMBINED_GAS'] / 256.0
+    self.gas_pressed = self.pedal_gas > 0
+
     # calc best v_ego estimate, by averaging two opposite corners
     self.v_wheel_fl = cp.vl["WHEEL_SPEEDS"]['WHEEL_SPEED_FL'] * CV.MPH_TO_MS
     self.v_wheel_fr = cp.vl["WHEEL_SPEEDS"]['WHEEL_SPEED_FR'] * CV.MPH_TO_MS
@@ -112,18 +111,14 @@ class CarState(object):
 
     self.angle_steers = cp.vl["STEER_SENSOR"]['STEER_ANGLE']
     self.angle_steers_rate = cp.vl["STEER_SENSOR"]['STEER_RATE']
-    self.gear_shifter = parse_gear_shifter(can_gear)
+    
     self.main_on = 1
     self.left_blinker_on = cp.vl["DRIVER_CONTROLS"]['LEFT_BLINKER']
     self.right_blinker_on = cp.vl["DRIVER_CONTROLS"]['RIGHT_BLINKER']
 
-    self.brake_error = 0
-    self.user_brake = 0
-
     self.v_cruise = cp.vl["CRUISE_CONTROL3"]['CRUISE_SET_SPEED'] * CV.MPH_TO_MS
     self.cruise_enabled = not cp.vl["CRUISE_CONTROL3"]['CRUISE_DISABLED']
-    # self.pcm_acc_status = cp.vl["PCM_CRUISE"]['CRUISE_STATE']
-    # self.gas_pressed = not cp.vl["PCM_CRUISE"]['GAS_RELEASED']
-    self.gas_pressed = self.pedal_gas > 0
-    self.brake_lights = self.brake_pressed > 0
+    # self.pcm_acc_status = cp.vl["PCM_CRUISE"]['CRUISE_STATE']]
+    
+    
     self.generic_toggle = bool(cp.vl["DRIVER_CONTROLS"]['HIGHBEAM_TOGGLE'])

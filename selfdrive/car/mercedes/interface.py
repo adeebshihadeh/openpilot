@@ -89,8 +89,7 @@ class CarInterface(object):
 
     # min speed to enable ACC. if car can do stop and go, then set enabling speed
     # to a negative value, so it won't matter.
-    # if candidate in [CAR.RAV4, CAR.COROLLA]: # TODO: hack ICE to do stop and go
-    #   ret.minEnableSpeed = 19. * CV.MPH_TO_MS
+    ret.minEnableSpeed = 20. * CV.MPH_TO_MS
 
     centerToRear = ret.wheelbase - ret.centerToFront
     # TODO: get actual value, for now starting with reasonable value for
@@ -168,21 +167,15 @@ class CarInterface(object):
     # steering wheel
     ret.steeringAngle = self.CS.angle_steers
     ret.steeringRate = self.CS.angle_steers_rate
-
-    # ret.steeringTorque = self.CS.steer_torque_driver
-    # ret.steeringPressed = self.CS.steer_override
+    ret.steeringTorque = 0
+    ret.steeringPressed = False
 
     # cruise state
     ret.cruiseState.enabled = self.CS.cruise_enabled
     ret.cruiseState.speed = self.CS.v_cruise
-    # ret.cruiseState.available = bool(self.CS.main_on)
+    ret.cruiseState.available = bool(self.CS.main_on)
     ret.cruiseState.speedOffset = 0.
-    # if self.CP.carFingerprint == CAR.RAV4H:
-    #   # ignore standstill in hybrid rav4, since pcm allows to restart without
-    #   # receiving any special command
-    #   ret.cruiseState.standstill = False
-    # else:
-    #   ret.cruiseState.standstill = self.CS.pcm_acc_status == 7
+    ret.cruiseState.standstill = False
 
     # TODO: button presses
     buttonEvents = []
@@ -240,12 +233,6 @@ class CarInterface(object):
     #   if ret.vEgo < 0.001:
     #     # while in standstill, send a user alert
     #     events.append(create_event('manualRestart', [ET.WARNING]))
-
-    # enable request in prius is simple, as we activate when Toyota is active (rising edge)
-    # if ret.cruiseState.enabled and not self.cruise_enabled_prev:
-    #   events.append(create_event('pcmEnable', [ET.ENABLE]))
-    # elif not ret.cruiseState.enabled:
-    #   events.append(create_event('pcmDisable', [ET.USER_DISABLE]))
 
     # disable on pedals rising edge or when brake is pressed and speed isn't zero
     if (ret.gasPressed and not self.gas_pressed_prev) or \
