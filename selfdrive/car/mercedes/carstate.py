@@ -77,6 +77,8 @@ class CarState(object):
 
     self.door_all_closed = not any([cp.vl["DOOR_SENSORS"]['DOOR_OPEN_FL'], cp.vl["DOOR_SENSORS"]['DOOR_OPEN_FR'],
                                     cp.vl["DOOR_SENSORS"]['DOOR_OPEN_RL'], cp.vl["DOOR_SENSORS"]['DOOR_OPEN_RR']])
+    # TODOO: figure out why can door signal isn't reliable
+    self.door_all_closed = True 
     self.seatbelt = cp.vl["SEATBELT_SENSORS"]['SEATBELT_DRIVER_LATCHED']
 
     can_gear = cp.vl["GEAR_PACKET"]['GEAR']
