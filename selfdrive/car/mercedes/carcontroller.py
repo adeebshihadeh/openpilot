@@ -65,31 +65,6 @@ def accel_hysteresis(accel, accel_steady, enabled):
 
 #   return steer, fcw, sound1, sound2
 
-
-# def ipas_state_transition(steer_angle_enabled, enabled, ipas_active, ipas_reset_counter):
-
-#   if enabled and not steer_angle_enabled:
-#     #ipas_reset_counter = max(0, ipas_reset_counter - 1)
-#     #if ipas_reset_counter == 0:
-#     #  steer_angle_enabled = True
-#     #else:
-#     #  steer_angle_enabled = False
-#     #return steer_angle_enabled, ipas_reset_counter
-#     return True, 0
-
-#   elif enabled and steer_angle_enabled:
-#     if steer_angle_enabled and not ipas_active:
-#       ipas_reset_counter += 1
-#     else:
-#       ipas_reset_counter = 0
-#     if ipas_reset_counter > 10:  # try every 0.1s
-#       steer_angle_enabled = False
-#     return steer_angle_enabled, ipas_reset_counter
-
-#   else:
-#     return False, 0
-
-
 class CarController(object):
   def __init__(self, dbc_name, car_fingerprint):
     self.braking = False
@@ -122,53 +97,54 @@ class CarController(object):
     # steer torque
     apply_steer = int(round(actuators.steer * STEER_MAX))
 
-    max_lim = min(max(CS.steer_torque_motor + STEER_ERROR_MAX, STEER_ERROR_MAX), STEER_MAX)
-    min_lim = max(min(CS.steer_torque_motor - STEER_ERROR_MAX, -STEER_ERROR_MAX), -STEER_MAX)
+    # max_lim = min(max(CS.steer_torque_motor + STEER_ERROR_MAX, STEER_ERROR_MAX), STEER_MAX)
+    # min_lim = max(min(CS.steer_torque_motor - STEER_ERROR_MAX, -STEER_ERROR_MAX), -STEER_MAX)
 
-    apply_steer = clip(apply_steer, min_lim, max_lim)
+    # apply_steer = clip(apply_steer, min_lim, max_lim)
 
-    # slow rate if steer torque increases in magnitude
-    if self.last_steer > 0:
-      apply_steer = clip(apply_steer, max(self.last_steer - STEER_DELTA_DOWN, - STEER_DELTA_UP), self.last_steer + STEER_DELTA_UP)
-    else:
-      apply_steer = clip(apply_steer, self.last_steer - STEER_DELTA_UP, min(self.last_steer + STEER_DELTA_DOWN, STEER_DELTA_UP))
+    # # slow rate if steer torque increases in magnitude
+    # if self.last_steer > 0:
+    #   apply_steer = clip(apply_steer, max(self.last_steer - STEER_DELTA_DOWN, - STEER_DELTA_UP), self.last_steer + STEER_DELTA_UP)
+    # else:
+    #   apply_steer = clip(apply_steer, self.last_steer - STEER_DELTA_UP, min(self.last_steer + STEER_DELTA_DOWN, STEER_DELTA_UP))
 
     # dropping torque immediately might cause eps to temp fault. On the other hand, safety_toyota
     # cuts steer torque immediately anyway TODO: monitor if this is a real issue
     # only cut torque when steer state is a known fault
-    if not enabled or CS.steer_state in [9, 25]:
-      apply_steer = 0
+    # if not enabled or CS.steer_state in [9, 25]:
+    #   apply_steer = 0
 
     # self.steer_angle_enabled, self.ipas_reset_counter = \
     #   ipas_state_transition(self.steer_angle_enabled, enabled, CS.ipas_active, self.ipas_reset_counter)
     #print self.steer_angle_enabled, self.ipas_reset_counter, CS.ipas_active
 
     # steer angle
+    apply_angle = 0
     if self.steer_angle_enabled and CS.ipas_active:
       apply_angle = actuators.steerAngle
       angle_lim = interp(CS.v_ego, ANGLE_MAX_BP, ANGLE_MAX_V)
       apply_angle = clip(apply_angle, -angle_lim, angle_lim)
 
-      # windup slower
-      if self.last_angle * apply_angle > 0. and abs(apply_angle) > abs(self.last_angle):
-        angle_rate_lim = interp(CS.v_ego, ANGLE_DELTA_BP, ANGLE_DELTA_V)
-      else:
-        angle_rate_lim = interp(CS.v_ego, ANGLE_DELTA_BP, ANGLE_DELTA_VU)
+    #   # windup slower
+    #   if self.last_angle * apply_angle > 0. and abs(apply_angle) > abs(self.last_angle):
+    #     angle_rate_lim = interp(CS.v_ego, ANGLE_DELTA_BP, ANGLE_DELTA_V)
+    #   else:
+    #     angle_rate_lim = interp(CS.v_ego, ANGLE_DELTA_BP, ANGLE_DELTA_VU)
 
-      apply_angle = clip(apply_angle, self.last_angle - angle_rate_lim, self.last_angle + angle_rate_lim)
-    else:
-      apply_angle = CS.angle_steers
+    #   apply_angle = clip(apply_angle, self.last_angle - angle_rate_lim, self.last_angle + angle_rate_lim)
+    # else:
+    #   apply_angle = CS.angle_steers
 
-    if not enabled and CS.pcm_acc_status:
-      # send pcm acc cancel cmd if drive is disabled but pcm is still on, or if the system can't be activated
-      pcm_cancel_cmd = 1
+    # if not enabled and CS.pcm_acc_status:
+    #   # send pcm acc cancel cmd if drive is disabled but pcm is still on, or if the system can't be activated
+    #   pcm_cancel_cmd = 1
 
     # on entering standstill, send standstill request
     if CS.standstill and not self.last_standstill:
       self.standstill_req = True
-    if CS.pcm_acc_status != 8:
-      # pcm entered standstill or it's disabled
-      self.standstill_req = False
+    # if CS.pcm_acc_status != 8:
+    #   # pcm entered standstill or it's disabled
+    #   self.standstill_req = False
 
     self.last_steer = apply_steer
     self.last_angle = apply_angle
@@ -202,40 +178,42 @@ class CarController(object):
     #   else:
     #     can_sends.append(create_accel_command(self.packer, 0, pcm_cancel_cmd, False))
 
+    print "\n\n\n\n", "accel", repr(apply_accel), "\n", "actuators", repr(actuators),  "\n\n\n\n"
+
     # ui mesg is at 100Hz but we send asap if:
     # - there is something to display
     # - there is something to stop displaying
     # alert_out = process_hud_alert(hud_alert, audible_alert)
-    steer, fcw, sound1, sound2 = alert_out
+    # steer, fcw, sound1, sound2 = alert_out
 
-    if (any(alert_out) and not self.alert_active) or \
-       (not any(alert_out) and self.alert_active):
-      send_ui = True
-      self.alert_active = not self.alert_active
-    else:
-      send_ui = False
+    # if (any(alert_out) and not self.alert_active) or \
+    #    (not any(alert_out) and self.alert_active):
+    #   send_ui = True
+    #   self.alert_active = not self.alert_active
+    # else:
+    #   send_ui = False
 
-    if (frame % 100 == 0 or send_ui) and ECU.CAM in self.fake_ecus:
-      can_sends.append(create_ui_command(self.packer, steer, sound1, sound2))
-      can_sends.append(create_fcw_command(self.packer, fcw))
+    # if (frame % 100 == 0 or send_ui) and ECU.CAM in self.fake_ecus:
+    #   can_sends.append(create_ui_command(self.packer, steer, sound1, sound2))
+    #   can_sends.append(create_fcw_command(self.packer, fcw))
 
     #*** static msgs ***
 
-    for (addr, ecu, cars, bus, fr_step, vl) in STATIC_MSGS:
-      if frame % fr_step == 0 and ecu in self.fake_ecus and self.car_fingerprint in cars:
-        # special cases
-        if fr_step == 5 and ecu == ECU.CAM and bus == 1:
-          cnt = (((frame / 5) % 7) + 1) << 5
-          vl = chr(cnt) + vl
-        elif addr in (0x489, 0x48a) and bus == 0:
-          # add counter for those 2 messages (last 4 bits)
-          cnt = ((frame/100)%0xf) + 1
-          if addr == 0x48a:
-            # 0x48a has a 8 preceding the counter
-            cnt += 1 << 7
-          vl += chr(cnt)
+    # for (addr, ecu, cars, bus, fr_step, vl) in STATIC_MSGS:
+    #   if frame % fr_step == 0 and ecu in self.fake_ecus and self.car_fingerprint in cars:
+    #     # special cases
+    #     if fr_step == 5 and ecu == ECU.CAM and bus == 1:
+    #       cnt = (((frame / 5) % 7) + 1) << 5
+    #       vl = chr(cnt) + vl
+    #     elif addr in (0x489, 0x48a) and bus == 0:
+    #       # add counter for those 2 messages (last 4 bits)
+    #       cnt = ((frame/100)%0xf) + 1
+    #       if addr == 0x48a:
+    #         # 0x48a has a 8 preceding the counter
+    #         cnt += 1 << 7
+    #       vl += chr(cnt)
 
-        can_sends.append(make_can_msg(addr, vl, bus, False))
+    #     can_sends.append(make_can_msg(addr, vl, bus, False))
 
 
-    sendcan.send(can_list_to_can_capnp(can_sends, msgtype='sendcan').to_bytes())
+    # sendcan.send(can_list_to_can_capnp(can_sends, msgtype='sendcan').to_bytes())

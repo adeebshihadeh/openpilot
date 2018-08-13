@@ -33,8 +33,7 @@ class CarInterface(object):
     # sending if read only is False
     if sendcan is not None:
       self.sendcan = sendcan
-      # self.CC = CarController(self.cp.dbc_name, CP.carFingerprint)
-      self.CC = None
+      self.CC = CarController(self.cp.dbc_name, CP.carFingerprint)
 
   @staticmethod
   def compute_gb(accel, speed):
@@ -56,10 +55,9 @@ class CarInterface(object):
 
     ret.safetyModel = car.CarParams.SafetyModels.mercedes
 
-    # pedal
     ret.enableCruise = True
-
     ret.enableCamera = True
+    ret.radarOffCan = True
 
     # FIXME: hardcoding honda civic 2016 touring params so they can be used to
     # scale unknown params for other cars
@@ -247,9 +245,9 @@ class CarInterface(object):
   # pass in a car.CarControl
   # to be called @ 100hz
   def apply(self, c, perception_state=log.Live20Data.new_message()):
-    # self.CC.update(self.sendcan, c.enabled, self.CS, self.frame,
-    #                c.actuators, c.cruiseControl.cancel, c.hudControl.visualAlert,
-    #                c.hudControl.audibleAlert)
+    self.CC.update(self.sendcan, c.enabled, self.CS, self.frame,
+                   c.actuators, c.cruiseControl.cancel, c.hudControl.visualAlert,
+                   c.hudControl.audibleAlert)
 
     self.frame += 1
     return False
