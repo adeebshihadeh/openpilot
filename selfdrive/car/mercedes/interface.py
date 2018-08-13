@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from common.realtime import sec_since_boot
-from cereal import car
+from cereal import car, log
 from selfdrive.config import Conversions as CV
 from selfdrive.controls.lib.drive_helpers import EventTypes as ET, create_event
 from selfdrive.controls.lib.vehicle_model import VehicleModel
@@ -58,6 +58,8 @@ class CarInterface(object):
 
     # pedal
     ret.enableCruise = True
+
+    ret.enableCamera = True
 
     # FIXME: hardcoding honda civic 2016 touring params so they can be used to
     # scale unknown params for other cars
@@ -160,7 +162,7 @@ class CarInterface(object):
 
     # brake pedal
     ret.brake = self.CS.user_brake
-    ret.brakePressed = self.CS.brake_pressed != 0
+    ret.brakePressed = self.CS.brake_pressed
     ret.brakeLights = self.CS.brake_lights
 
     # steering wheel
@@ -214,16 +216,8 @@ class CarInterface(object):
       events.append(create_event('doorOpen', [ET.NO_ENTRY, ET.SOFT_DISABLE]))
     if ret.seatbeltUnlatched:
       events.append(create_event('seatbeltNotLatched', [ET.NO_ENTRY, ET.SOFT_DISABLE]))
-    # if self.CS.esp_disabled and self.CP.enableDsu:
-    #   events.append(create_event('espDisabled', [ET.NO_ENTRY, ET.SOFT_DISABLE]))
-    # if not self.CS.main_on and self.CP.enableDsu:
-    #   events.append(create_event('wrongCarMode', [ET.NO_ENTRY, ET.USER_DISABLE]))
     # if ret.gearShifter == 'reverse' and self.CP.enableDsu:
     #   events.append(create_event('reverseGear', [ET.NO_ENTRY, ET.IMMEDIATE_DISABLE]))
-    # if self.CS.steer_error:
-    #   events.append(create_event('steerTempUnavailable', [ET.NO_ENTRY, ET.WARNING]))
-    # if self.CS.low_speed_lockout and self.CP.enableDsu:
-    #   events.append(create_event('lowSpeedLockout', [ET.NO_ENTRY, ET.PERMANENT]))
     # if ret.vEgo < self.CP.minEnableSpeed and self.CP.enableDsu:
     #   events.append(create_event('speedTooLow', [ET.NO_ENTRY]))
     #   if c.actuators.gas > 0.1:
@@ -252,7 +246,7 @@ class CarInterface(object):
 
   # pass in a car.CarControl
   # to be called @ 100hz
-  def apply(self, c):
+  def apply(self, c, perception_state=log.Live20Data.new_message()):
     # self.CC.update(self.sendcan, c.enabled, self.CS, self.frame,
     #                c.actuators, c.cruiseControl.cancel, c.hudControl.visualAlert,
     #                c.hudControl.audibleAlert)

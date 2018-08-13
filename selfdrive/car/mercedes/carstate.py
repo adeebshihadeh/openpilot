@@ -78,16 +78,16 @@ class CarState(object):
     self.door_all_closed = not any([cp.vl["DOOR_SENSORS"]['DOOR_OPEN_FL'], cp.vl["DOOR_SENSORS"]['DOOR_OPEN_FR'],
                                     cp.vl["DOOR_SENSORS"]['DOOR_OPEN_RL'], cp.vl["DOOR_SENSORS"]['DOOR_OPEN_RR']])
     # TODOO: figure out why can door signal isn't reliable
-    self.door_all_closed = True 
+    self.door_all_closed = True
     self.seatbelt = cp.vl["SEATBELT_SENSORS"]['SEATBELT_DRIVER_LATCHED']
 
     can_gear = cp.vl["GEAR_PACKET"]['GEAR']
     self.gear_shifter = parse_gear_shifter(can_gear)
 
-    self.brake_pressed = cp.vl["BRAKE_MODULE"]['DRIVER_BRAKE']
+    self.brake_pressed = cp.vl["BRAKE_MODULE"]['DRIVER_BRAKE'] != 0
     brake_position = cp.vl["BRAKE_MODULE"]['BRAKE_POSITION'] / 1024.
     self.user_brake = brake_position if self.brake_pressed else 0
-    self.brake_lights = brake_position > 0
+    self.brake_lights = brake_position != 0
 
     self.pedal_gas = cp.vl["GAS_PEDAL"]['GAS_PEDAL'] / 256.0
     self.car_gas = cp.vl["GAS_PEDAL"]['COMBINED_GAS'] / 256.0
@@ -113,14 +113,12 @@ class CarState(object):
 
     self.angle_steers = cp.vl["STEER_SENSOR"]['STEER_ANGLE']
     self.angle_steers_rate = cp.vl["STEER_SENSOR"]['STEER_RATE']
-    
+
     self.main_on = 1
     self.left_blinker_on = cp.vl["DRIVER_CONTROLS"]['LEFT_BLINKER']
     self.right_blinker_on = cp.vl["DRIVER_CONTROLS"]['RIGHT_BLINKER']
 
     self.v_cruise = cp.vl["CRUISE_CONTROL3"]['CRUISE_SET_SPEED'] * CV.MPH_TO_MS
     self.cruise_enabled = not cp.vl["CRUISE_CONTROL3"]['CRUISE_DISABLED']
-    # self.pcm_acc_status = cp.vl["PCM_CRUISE"]['CRUISE_STATE']]
-    
-    
+
     self.generic_toggle = bool(cp.vl["DRIVER_CONTROLS"]['HIGHBEAM_TOGGLE'])
