@@ -171,7 +171,7 @@ class CarInterface(object):
 
     # cruise state
     ret.cruiseState.enabled = self.CS.cruise_enabled
-    ret.cruiseState.speed = self.CS.v_cruise * CV.MPH_TO_MS
+    ret.cruiseState.speed = self.CS.v_cruise
     ret.cruiseState.available = bool(self.CS.main_on)
     ret.cruiseState.speedOffset = 0.
     ret.cruiseState.standstill = False
