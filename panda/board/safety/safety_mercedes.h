@@ -10,10 +10,6 @@ static void mercerdes_rx_hook(CAN_FIFOMailBox_TypeDef *to_push) {
   if (addr == 0x245 && bus_number == 0) {
     mercedes_ign = (mercedes_ign << 1) + (to_push->RDLR != 0xffffffff);
   }
-  // puth(mercedes_ign);
-  // puts("\n");
-  // puth(mercedes_ign > 0);
-  // puts("\n");
 
   // // enter controls on rising edge of ACC, exit controls on ACC off
   // if ((addr == 0x370) && (bus_number == 0)) {
