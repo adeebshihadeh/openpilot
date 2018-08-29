@@ -1,5 +1,3 @@
-import struct
-
 
 # *** Mercedes specific ***
 
@@ -10,9 +8,7 @@ def calc_checksum(data):
 
   for byte in data:
     shift = 0x80
-    iterate = 8
-    while iterate:
-      iterate -= 1
+    for i in range(8, 0, -1):
       bit_sum = byte & shift
       temp_chk = checksum & 0x80
       if bit_sum != 0:
@@ -38,88 +34,31 @@ def make_can_msg(addr, dat, alt, cks=False):
   return [addr, 0, dat, alt]
 
 
+# use cruise control stalk to adjust speed
+def create_accel_change_command(change, cnt):
+  addr = 0x45
+  bus = 0
+  dat = [0x00, 0xff, 0x00, 0x00, 0x00, 0x00, cnt]
+
+  if change >= 5:
+    dat[0] = 0x4
+  elif change >= 1:
+    dat[0] = 0x8
+  elif change <= -5:
+    dat[0] = 0x10
+  elif change <= -1:
+    dat[0] = 0x20
+
+  dat.append(calc_checksum(dat))
+
+  # [addr, 0, msg, bus]
+  return [addr, 0, dat, 0]
 
 
 
-# ********** unimplemented stuff taken from toyotacan.py **********
-
-
-
-def create_ipas_steer_command(packer, steer, enabled, apgs_enabled):
-  # """Creates a CAN message for the Toyota Steer Command."""
-  # if steer < 0:
-  #   direction = 3
-  # elif steer > 0:
-  #   direction = 1
-  # else:
-  #   direction = 2
-
-  # mode = 3 if enabled else 1
-
-  # values = {
-  #   "STATE": mode,
-  #   "DIRECTION_CMD": direction,
-  #   "ANGLE": steer,
-  #   "SET_ME_X10": 0x10,
-  #   "SET_ME_X40": 0x40
-  # }
-  # if apgs_enabled:
-  #   return packer.make_can_msg("STEERING_IPAS", 0, values)
-  # else:
-  #   return packer.make_can_msg("STEERING_IPAS_COMMA", 0, values)
-  return None
-
-
-def create_steer_command(packer, steer, raw_cnt):
-  # """Creates a CAN message for the Toyota Steer Command."""
-
-  # values = {
-  #   "STEER_REQUEST": abs(steer) > 0.001,
-  #   "STEER_TORQUE_CMD": steer,
-  #   "COUNTER": raw_cnt,
-  #   "SET_ME_1": 1,
-  # }
-  # return packer.make_can_msg("STEERING_LKA", 0, values)
-  return None
-
-
-def create_accel_command(packer, accel, pcm_cancel, standstill_req):
-  # TODO: find the exact canceling bit
-  values = {
-    "ACCEL_CMD": accel,
-    "SET_ME_X63": 0x63,
-    "SET_ME_1": 1,
-    "RELEASE_STANDSTILL": not standstill_req,
-    "CANCEL_REQ": pcm_cancel,
-  }
-  return packer.make_can_msg("ACC_CONTROL", 0, values)
-
-
-def create_ui_command(packer, steer, sound1, sound2):
-  # values = {
-  #   "RIGHT_LINE": 1,
-  #   "LEFT_LINE": 1,
-  #   "SET_ME_X0C": 0x0c,
-  #   "SET_ME_X2C": 0x2c,
-  #   "SET_ME_X38": 0x38,
-  #   "SET_ME_X02": 0x02,
-  #   "SET_ME_X01": 1,
-  #   "SET_ME_X01_2": 1,
-  #   "REPEATED_BEEPS": sound1,
-  #   "TWO_BEEPS": sound2,
-  #   "LDA_ALERT": steer,
-  # }
-  # return packer.make_can_msg("LKAS_HUD", 0, values)
-  return None
-
-def fix(msg, addr):
-  checksum = 0
-  idh = (addr & 0xff00) >> 8
-  idl = (addr & 0xff)
-
-  checksum = idh + idl + len(msg) + 1
-  for d_byte in msg:
-    checksum += ord(d_byte)
-
-  #return msg + chr(checksum & 0xFF)
-  return msg + struct.pack("B", checksum & 0xFF)
+if __name__ == "__main__":
+  print "accel cmds"
+  print "+5 mph", repr(create_accel_change_command(5, 0x10))
+  print "-5 mph", repr(create_accel_change_command(-5, 0x20))
+  print "+1 mph", repr(create_accel_change_command(1, 0x30))
+  print "-1 mph", repr(create_accel_change_command(-1, 0x40))
