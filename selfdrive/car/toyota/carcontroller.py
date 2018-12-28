@@ -20,8 +20,8 @@ ACCEL_SCALE = max(ACCEL_MAX, -ACCEL_MIN)
 # Steer torque limits
 STEER_MAX = 1500
 STEER_DELTA_UP = 10       # 1.5s time to peak torque
-STEER_DELTA_DOWN = 20     # always lower than 45 otherwise the Rav4 faults (Prius seems ok with 50)
-STEER_ERROR_MAX = 300     # max delta between torque cmd and torque motor
+STEER_DELTA_DOWN = 25     # always lower than 45 otherwise the Rav4 faults (Prius seems ok with 50)
+STEER_ERROR_MAX = 310     # max delta between torque cmd and torque motor
 
 # Steer angle limits (tested at the Crows Landing track and considered ok)
 ANGLE_MAX_BP = [0., 5.]
