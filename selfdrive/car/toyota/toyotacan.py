@@ -75,6 +75,13 @@ def create_accel_command(packer, accel, pcm_cancel, standstill_req):
   }
   return packer.make_can_msg("ACC_CONTROL", 0, values)
 
+def create_is_accel_command(packer, accel, pcm_cancel, standstill_req, raw_cnt):
+  values = {
+    "COUNTER": raw_cnt,
+    "ACC_CMD": accel,
+    "SET_ME_X84": 0x00 if pcm_cancel == 1 else 0x84
+  }
+  return packer.make_can_msg("ACC_CONTROL_IS", 0, values)
 
 def create_fcw_command(packer, fcw):
   values = {
