@@ -217,11 +217,9 @@ class CarController(object):
     # accel cmd comes from DSU, but we can spam can to cancel the system even if we are using lat only control
     if (frame % 3 == 0 and ECU.DSU in self.fake_ecus) or (pcm_cancel_cmd and ECU.CAM in self.fake_ecus):
       if ECU.DSU in self.fake_ecus:
-        # can_sends.append(create_accel_command(self.packer, apply_accel, pcm_cancel_cmd, self.standstill_req))
-        can_sends.append(create_is_accel_command(self.packer, apply_accel, pcm_cancel_cmd, self.standstill_req, (frame/3)%0x7f))
+        can_sends.append(create_accel_command(self.packer, apply_accel, pcm_cancel_cmd, self.standstill_req, self.car_fingerprint))
       else:
-        #can_sends.append(create_accel_command(self.packer, 0, pcm_cancel_cmd, False))
-        can_sends.append(create_is_accel_command(self.packer, 0, pcm_cancel_cmd, self.standstill_req, (frame/3)%0x7f))
+        can_sends.append(create_accel_command(self.packer, 0, pcm_cancel_cmd, False, self.car_fingerprint))
 
     if frame % 10 == 0 and ECU.CAM in self.fake_ecus and not forwarding_camera:
       for addr in TARGET_IDS:

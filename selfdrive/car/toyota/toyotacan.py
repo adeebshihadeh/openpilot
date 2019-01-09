@@ -1,5 +1,5 @@
 import struct
-
+from selfdrive.car.toyota.values import CAR
 
 # *** Toyota specific ***
 
@@ -64,7 +64,7 @@ def create_steer_command(packer, steer, steer_req, raw_cnt):
   return packer.make_can_msg("STEERING_LKA", 0, values)
 
 
-def create_accel_command(packer, accel, pcm_cancel, standstill_req):
+def create_accel_command(packer, accel, pcm_cancel, standstill_req, fingerprint):
   # TODO: find the exact canceling bit that does not create a chime
   values = {
     "ACCEL_CMD": accel,
@@ -73,15 +73,18 @@ def create_accel_command(packer, accel, pcm_cancel, standstill_req):
     "RELEASE_STANDSTILL": not standstill_req,
     "CANCEL_REQ": pcm_cancel,
   }
-  return packer.make_can_msg("ACC_CONTROL", 0, values)
 
-def create_is_accel_command(packer, accel, pcm_cancel, standstill_req, raw_cnt):
-  values = {
-    "COUNTER": raw_cnt,
-    "ACC_CMD": accel,
-    "SET_ME_X84": 0x00 if pcm_cancel == 1 else 0x84
-  }
-  return packer.make_can_msg("ACC_CONTROL_IS", 0, values)
+  # IS acc control is on a different address with different signals
+  # should only be used when cancelling acc,
+  # since IS with dsu disconnected isn't supported
+  if fingerprint == CAR.LEXUS_IS:
+    values = {
+      "COUNTER": 0x00,
+      "ACCEL_CMD": 0,
+      "ACC_STATUS": 0x00 if pcm_cancel else 0x24
+    }
+
+  return packer.make_can_msg("ACC_CONTROL", 0, values)
 
 def create_fcw_command(packer, fcw):
   values = {
