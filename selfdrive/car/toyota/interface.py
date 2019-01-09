@@ -115,7 +115,7 @@ class CarInterface(object):
       ret.steerKf = 0.00006   # full torque for 10 deg at 80mph means 0.00007818594
 
     elif candidate == CAR.LEXUS_IS:
-      ret.safetyParam = 66
+      ret.safetyParam = 100
       ret.wheelbase = 2.79908
       ret.steerRatio = 13.3
       tire_stiffness_factor = 0.444
