@@ -54,7 +54,6 @@ def get_can_parser(CP):
     ("WHEEL_SPEEDS", 80),
     ("STEER_ANGLE_SENSOR", 80),
     ("PCM_CRUISE", 33),
-    ("PCM_CRUISE_2", 33),
     ("STEER_TORQUE_SENSOR", 50),
     ("EPS_STATUS", 25),
   ]
@@ -62,7 +61,10 @@ def get_can_parser(CP):
   if CP.carFingerprint == CAR.PRIUS:
     signals += [("STATE", "AUTOPARK_STATUS", 0)]
 
-  if CP.carFingerprint != CAR.LEXUS_IS:
+  if CP.carFingerprint == CAR.LEXUS_IS:
+    checks += [("PCM_CRUISE_2", 1)]
+  else:
+    checks += [("PCM_CRUISE_2", 33)]
     signals += [("LOW_SPEED_LOCKOUT", "PCM_CRUISE_2", 0)]
 
   return CANParser(DBC[CP.carFingerprint]['pt'], signals, checks, 0)
