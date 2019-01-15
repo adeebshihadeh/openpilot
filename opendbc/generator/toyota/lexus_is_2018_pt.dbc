@@ -35,6 +35,7 @@ BO_ 1009 PCM_CRUISE_2: 8 XXX
  SG_ MAIN_ON : 13|1@0+ (1,0) [0|3] "" XXX
  SG_ CRUISE_STATE : 10|1@0+ (1,0) [0|1] "" XXX
  SG_ SET_SPEED : 23|8@0+ (1,0) [0|255] "mph" XXX
+ SG_ LOW_SPEED_LOCKOUT : 39|2@0+ (1,0) [0|3] "" XXX
 
 CM_ SG_ 550 BRAKE_PRESSURE "seems prop to pedal force";
 CM_ SG_ 550 BRAKE_POSITION "seems proportional to pedal displacement, unclear the max value of 0x1c8";
