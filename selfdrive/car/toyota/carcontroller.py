@@ -4,7 +4,7 @@ from selfdrive.boardd.boardd import can_list_to_can_capnp
 from selfdrive.car.toyota.toyotacan import make_can_msg, create_video_target,\
                                            create_steer_command, create_ui_command, \
                                            create_ipas_steer_command, create_accel_command, \
-                                           create_fcw_command
+                                           create_acc_cancel_cmd, create_fcw_command
 from selfdrive.car.toyota.values import ECU, STATIC_MSGS
 from selfdrive.can.packer import CANPacker
 
@@ -215,11 +215,12 @@ class CarController(object):
       can_sends.append(create_ipas_steer_command(self.packer, 0, 0, True))
 
     # accel cmd comes from DSU, but we can spam can to cancel the system even if we are using lat only control
-    if (frame % 3 == 0 and ECU.DSU in self.fake_ecus) or (pcm_cancel_cmd and ECU.CAM in self.fake_ecus):
-      if ECU.DSU in self.fake_ecus:
-        can_sends.append(create_accel_command(self.packer, apply_accel, pcm_cancel_cmd, self.standstill_req, frame/3, self.car_fingerprint))
-      else:
-        can_sends.append(create_accel_command(self.packer, 0, pcm_cancel_cmd, False, frame/3, self.car_fingerprint))
+    if frame % 3 == 0 and ECU.DSU in self.fake_ecus:
+      can_sends.append(create_accel_command(self.packer, apply_accel, pcm_cancel_cmd, self.standstill_req))
+
+    # use pcm_cruise msg to cancel as it's more universal
+    if pcm_cancel_cmd and ECU.CAM in self.fake_ecus:
+      can_sends.append(create_acc_cancel_command(self.packer, pcm_cancel_cmd, self.standstill_req))
 
     if frame % 10 == 0 and ECU.CAM in self.fake_ecus and not forwarding_camera:
       for addr in TARGET_IDS:
