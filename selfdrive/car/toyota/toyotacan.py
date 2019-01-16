@@ -64,7 +64,7 @@ def create_steer_command(packer, steer, steer_req, raw_cnt):
   return packer.make_can_msg("STEERING_LKA", 0, values)
 
 
-def create_accel_command(packer, accel, pcm_cancel, standstill_req, fingerprint):
+def create_accel_command(packer, accel, pcm_cancel, standstill_req, raw_cnt, fingerprint):
   # TODO: find the exact canceling bit that does not create a chime
   values = {
     "ACCEL_CMD": accel,
@@ -75,13 +75,13 @@ def create_accel_command(packer, accel, pcm_cancel, standstill_req, fingerprint)
   }
 
   # IS acc control is on a different address with different signals
-  # should only be used when cancelling acc,
-  # since IS with dsu disconnected isn't supported
+  # only used for cancelling acc, since IS with dsu disconnected isn't supported
   if fingerprint == CAR.LEXUS_IS:
     values = {
-      "COUNTER": 0x00,
-      "ACCEL_CMD": 0,
-      "ACC_STATUS": 0x00 if pcm_cancel else 0x24
+      "COUNTER": raw_cnt % 0x7f,
+      "CANCEL_REQ": pcm_cancel,
+      "ACCEL_CMD": accel,
+      "ACC_STATUS": 0x24 if accel != 0 else 0x00 # TODO: check if this can be 0
     }
 
   return packer.make_can_msg("ACC_CONTROL", 0, values)
