@@ -38,7 +38,9 @@ BO_ 835 ACC_CONTROL: 8 DSU
  SG_ CHECKSUM : 63|8@0+ (1,0) [0|255] "" XXX
 
 BO_ 956 GEAR_PACKET: 8 XXX
+ SG_ SPORT_ON : 2|1@0+ (1,0) [0|1] "" XXX
  SG_ GEAR : 13|6@0+ (1,0) [0|63] "" XXX
+ SG_ ECON_ON : 40|1@0+ (1,0) [0|1] "" XXX
 
 CM_ SG_ 467 SET_SPEED "43 kph are shown as 28mph, so conversion isnt perfect";
 CM_ SG_ 467 LOW_SPEED_LOCKOUT "in low speed lockout, system would always disengage below 28mph";
@@ -50,3 +52,5 @@ VAL_ 467 LOW_SPEED_LOCKOUT 2 "low speed locked" 1 "ok";
 VAL_ 610 IPAS_STATE 5 "override" 3 "enabled" 1 "disabled";
 VAL_ 610 LKA_STATE 25 "temporary_fault" 9 "temporary_fault2" 5 "active" 1 "standby";
 VAL_ 956 GEAR 0 "D" 1 "S" 8 "N" 16 "R" 32 "P";
+VAL_ 956 SPORT_ON 0 "off" 1 "on";
+VAL_ 956 ECON_ON 0 "off" 1 "on";

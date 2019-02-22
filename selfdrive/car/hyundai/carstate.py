@@ -1,4 +1,4 @@
-from selfdrive.car.hyundai.values import DBC
+from selfdrive.car.hyundai.values import DBC, STEER_THRESHOLD
 from selfdrive.can.parser import CANParser
 from selfdrive.config import Conversions as CV
 from common.kalman.simple_kalman import KF1D
@@ -50,6 +50,7 @@ def get_can_parser(CP):
     ("CF_Clu_InhibitR", "CLU15", 0),
 
     ("CF_Lvr_Gear","LVR12",0),
+    ("CUR_GR", "TCU12",0),
 
     ("ACCEnable", "TCS13", 0),
     ("ACC_REQ", "TCS13", 0),
@@ -191,7 +192,7 @@ class CarState(object):
     self.left_blinker_flash = cp.vl["CGW1"]['CF_Gway_TurnSigLh']
     self.right_blinker_on = cp.vl["CGW1"]['CF_Gway_TSigRHSw']
     self.right_blinker_flash = cp.vl["CGW1"]['CF_Gway_TurnSigRh']
-    self.steer_override = abs(cp.vl["MDPS11"]['CR_Mdps_DrvTq']) > 100.
+    self.steer_override = abs(cp.vl["MDPS11"]['CR_Mdps_DrvTq']) > STEER_THRESHOLD
     self.steer_state = cp.vl["MDPS12"]['CF_Mdps_ToiActive'] #0 NOT ACTIVE, 1 ACTIVE
     self.steer_error = cp.vl["MDPS12"]['CF_Mdps_ToiUnavail']
     self.brake_error = 0
@@ -233,6 +234,17 @@ class CarState(object):
       self.gear_shifter_cluster = "reverse"
     else:
       self.gear_shifter_cluster = "unknown"
+
+    # Gear Selecton via TCU12
+    gear2 = cp.vl["TCU12"]["CUR_GR"]
+    if gear2 == 0:
+      self.gear_tcu = "park"
+    elif gear2 == 14:
+      self.gear_tcu = "reverse"
+    elif gear2 > 0 and gear2 < 9:    # unaware of anything over 8 currently
+      self.gear_tcu = "drive"
+    else:
+      self.gear_tcu = "unknown"
 
     # save the entire LKAS11 and CLU11
     self.lkas11 = cp_cam.vl["LKAS11"]
