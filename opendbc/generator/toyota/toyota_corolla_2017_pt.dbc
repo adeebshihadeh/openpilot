@@ -39,6 +39,7 @@ BO_ 835 ACC_CONTROL: 8 DSU
 
 BO_ 956 GEAR_PACKET: 8 XXX
  SG_ GEAR : 13|6@0+ (1,0) [0|63] "" XXX
+ SG_ SPORT_ON : 3|1@0+ (1,0) [0|1] "" XXX
 
 CM_ SG_ 467 SET_SPEED "43 kph are shown as 28mph, so conversion isnt perfect";
 CM_ SG_ 467 LOW_SPEED_LOCKOUT "in low speed lockout, system would always disengage below 28mph";
