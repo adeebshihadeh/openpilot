@@ -111,9 +111,9 @@ class CarInterface(object):
       ret.wheelbase = 2.79908
       ret.steerRatio = 13.3
       tire_stiffness_factor = 0.444
-      ret.mass = 3736.8 * CV.LB_TO_KG + std_cargo  # mean between min and max
-      ret.steerKpV, ret.steerKiV = [[0.19], [0.04]]
-      ret.steerKf = 0.00006
+      ret.mass = 3736.8 * CV.LB_TO_KG + STD_CARGO_KG  # mean between min and max
+      ret.lateralTuning.pid.kpV, ret.lateralTuning.pid.kiV = [[0.19], [0.04]]
+      ret.lateralTuning.pid.kf = 0.00006
 
     elif candidate in [CAR.CHR, CAR.CHRH]:
       stop_and_go = True
