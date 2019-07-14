@@ -117,6 +117,9 @@ def create_fcw_command(packer, fcw):
 
 
 def create_ui_command(packer, steer, sound1, sound2, left_line, right_line, left_lane_depart, right_lane_depart):
+  # disable sounds from car
+  sound1, sound2 = 0
+
   values = {
     "RIGHT_LINE": 3 if right_lane_depart else 1 if right_line else 2,
     "LEFT_LINE": 3 if left_lane_depart else 1 if left_line else 2,
