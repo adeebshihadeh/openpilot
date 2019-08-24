@@ -95,6 +95,18 @@ def create_accel_command(packer, accel, pcm_cancel, standstill_req, lead):
   return packer.make_can_msg("ACC_CONTROL", 0, values)
 
 
+def create_acc_cancel_command(packer):
+  values = {
+    "GAS_RELEASED": 0,
+    "CRUISE_ACTIVE": 0,
+    "STANDSTILL_ON": 0,
+    "ACCEL_NET": 0,
+    "CRUISE_STATE": 0,
+    "CANCEL_REQ": 1,
+  }
+  return packer.make_can_msg("PCM_CRUISE", 0, values)
+
+
 def create_fcw_command(packer, fcw):
   values = {
     "FCW": fcw,

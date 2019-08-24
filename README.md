@@ -92,6 +92,7 @@ Supported Cars
 | Kia                  | Optima 2019              | SCC + LKAS           | Yes     | Stock          | 0mph             | 0mph           | Custom<sup>6</sup>|
 | Kia                  | Sorento 2018             | All                  | Yes     | Stock          | 0mph             | 0mph           | Custom<sup>6</sup>|
 | Kia                  | Stinger 2018             | SCC + LKAS           | Yes     | Stock          | 0mph             | 0mph           | Custom<sup>6</sup>|
+| Lexus                | IS 2018                  | All                  | Yes     | Yes            | 22mph            | 0mph           | Toyota            |
 | Lexus                | ES Hybrid 2019           | All                  | Yes     | Yes            | 0mph             | 0mph           | Toyota            |
 | Lexus                | RX Hybrid 2016-19        | All                  | Yes     | Yes<sup>2</sup>| 0mph             | 0mph           | Toyota            |
 | Subaru               | Crosstrek 2018           | EyeSight             | Yes     | Stock          | 0mph             | 0mph           | Custom<sup>4</sup>|

@@ -207,6 +207,16 @@ class CarInterface(object):
       ret.lateralTuning.pid.kpV, ret.lateralTuning.pid.kiV = [[0.3], [0.05]]
       ret.lateralTuning.pid.kf = 0.00007818594
 
+    elif candidate == CAR.LEXUS_IS:
+      stop_and_go = False
+      ret.safetyParam = 66
+      ret.wheelbase = 2.79908
+      ret.steerRatio = 13.3
+      tire_stiffness_factor = 0.444
+      ret.mass = 3736.8 * CV.LB_TO_KG + STD_CARGO_KG
+      ret.lateralTuning.pid.kpV, ret.lateralTuning.pid.kiV = [[0.3], [0.05]]
+      ret.lateralTuning.pid.kf = 0.00006
+
     ret.steerRateCost = 1.
     ret.centerToFront = ret.wheelbase * 0.44
 
@@ -237,7 +247,7 @@ class CarInterface(object):
     ret.brakeMaxV = [1.]
 
     ret.enableCamera = not check_ecu_msgs(fingerprint, ECU.CAM) or is_panda_black
-    ret.enableDsu = not check_ecu_msgs(fingerprint, ECU.DSU)
+    ret.enableDsu = not check_ecu_msgs(fingerprint, ECU.DSU) and candidate != CAR.LEXUS_IS
     ret.enableApgs = False #not check_ecu_msgs(fingerprint, ECU.APGS)
     ret.openpilotLongitudinalControl = ret.enableCamera and ret.enableDsu
     cloudlog.warn("ECU Camera Simulated: %r", ret.enableCamera)
