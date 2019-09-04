@@ -226,6 +226,9 @@ class CarController(object):
     if frame % 10 == 0 and ECU.CAM in self.fake_ecus and not forwarding_camera:
       for addr in TARGET_IDS:
         can_sends.append(create_video_target(frame//10, addr))
+    
+    if frame % 10 == 0 and ECU.CAM in self.fake_ecus:
+      can_sends.append(create_magic_stop_and_go_command(self.packer, enabled))
 
     # ui mesg is at 100Hz but we send asap if:
     # - there is something to display

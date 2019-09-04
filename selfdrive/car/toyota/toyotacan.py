@@ -107,6 +107,13 @@ def create_acc_cancel_command(packer):
   return packer.make_can_msg("PCM_CRUISE", 0, values)
 
 
+def create_magic_stop_and_go_command(packer, cruise_active):
+  values = {
+    "LKDADRCC": 4 if cruise_active else 0,
+  }
+  return packer.make_can_msg("LKA_CONFIG", 0, values)
+
+
 def create_fcw_command(packer, fcw):
   values = {
     "FCW": fcw,
