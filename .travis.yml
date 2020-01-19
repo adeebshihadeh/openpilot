@@ -3,5 +3,15 @@ sudo: required
 services:
   - docker
 
-script:
-  - ./run_docker_tests.sh
+jobs:
+  include:
+    - stage: build
+      script:
+        - docker build -t tmppilot -f Dockerfile.openpilot .
+    - stage: test fingerprints
+      script: docker run --shm-size 1G --rm tmppilot /bin/sh -c "cd /tmp/openpilot/selfdrive/test/ && ./test_fingerprints.py"
+    - stage: linters
+      script:
+      - docker run --shm-size 1G --rm tmppilot /bin/sh -c "cd /tmp/openpilot && ./flake8_openpilot.sh"
+      - docker run --shm-size 1G --rm tmppilot /bin/sh -c "cd /tmp/openpilot && ./pylint_openpilot.sh"
+
