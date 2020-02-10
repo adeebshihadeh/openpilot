@@ -15,6 +15,7 @@ jobs:
     - name: Checkout submodules
       run: |
         git submodule update --init
+    - name: Build image
     - run: |
         docker pull $(grep -ioP '(?<=^from)\s+\S+' Dockerfile.openpilot) || true
         docker pull docker.io/adeebshihadeh/tmppilot:latest || true
