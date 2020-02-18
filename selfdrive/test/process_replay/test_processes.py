@@ -4,6 +4,7 @@ import requests
 import sys
 import tempfile
 
+from selfdrive.car.car_helpers import interface_names
 from selfdrive.test.process_replay.compare_logs import compare_logs
 from selfdrive.test.process_replay.process_replay import replay_process, CONFIGS
 from tools.lib.logreader import LogReader
@@ -17,6 +18,9 @@ segments = [
   "b6e1317e1bfbefa6|2019-07-06--04-05-26--5", # CHRYSLER.JEEP_CHEROKEE
   "7873afaf022d36e2|2019-07-03--18-46-44--0", # SUBARU.IMPREZA
 ]
+
+# ford port is incomplete. don't need test until a full port is done
+excluded_interfaces = ["ford"]
 
 def get_segment(segment_name):
   route_name, segment_num = segment_name.rsplit("--", 1)
@@ -39,6 +43,11 @@ if __name__ == "__main__":
     print("couldn't find reference commit")
     sys.exit(1)
 
+  # check to make sure all car brands are tested
+  print(list(interface_names))
+
+  # enable checks
+
   ref_commit = open(ref_commit_fn).read().strip()
   print("***** testing against commit %s *****" % ref_commit)
 
@@ -46,7 +55,9 @@ if __name__ == "__main__":
   for segment in segments:
     print("***** testing route segment %s *****\n" % segment)
 
-    results[segment] = {}
+    results[segment] = {
+      failed_checks: 
+    }
 
     rlog_fn = get_segment(segment)
 
@@ -58,6 +69,15 @@ if __name__ == "__main__":
 
     for cfg in CONFIGS:
       log_msgs = replay_process(cfg, lr)
+
+      # enable check
+      if cfg.proc_name == "controlsd":
+        failed = True
+        for msg in log_msgs:
+          if msg.which() == "controlsState":
+            if msg.controlsState.state == "enabled":
+              failed = False
+              break
 
       log_fn = os.path.join(process_replay_dir, "%s_%s_%s.bz2" % (segment, cfg.proc_name, ref_commit))
 
