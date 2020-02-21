@@ -175,8 +175,6 @@ class CarInterface(CarInterfaceBase):
       # TODO: why is this only not supercruise? ignore supercruise?
       if ret.vEgo < self.CP.minEnableSpeed:
         events.append(create_event('speedTooLow', [ET.NO_ENTRY]))
-      if self.CS.park_brake:
-        events.append(create_event('parkBrake', [ET.NO_ENTRY, ET.USER_DISABLE]))
       # disable on pedals rising edge or when brake is pressed and speed isn't zero
       if (ret.gasPressed and not self.gas_pressed_prev) or \
         (ret.brakePressed): # and (not self.brake_pressed_prev or ret.vEgo > 0.001)):

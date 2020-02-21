@@ -94,13 +94,11 @@ class CarController():
     self.packer = CANPacker(dbc_name)
     self.new_radar_config = False
 
-    self.params = CarControllerParams(CP)
+    self.P = CarControllerParams(CP)
 
   def update(self, enabled, CS, frame, actuators, \
              pcm_speed, pcm_override, pcm_cancel_cmd, pcm_accel, \
              hud_v_cruise, hud_show_lanes, hud_show_car, hud_alert):
-
-    P = self.params
 
     # *** apply brake hysteresis ***
     brake, self.braking, self.brake_steady = actuator_hystereses(actuators.brake, self.braking, self.brake_steady, CS.out.vEgo, CS.CP.carFingerprint)
@@ -136,8 +134,8 @@ class CarController():
 
     # steer torque is converted back to CAN reference (positive when steering right)
     apply_gas = clip(actuators.gas, 0., 1.)
-    apply_brake = int(clip(self.brake_last * P.BRAKE_MAX, 0, P.BRAKE_MAX - 1))
-    apply_steer = int(interp(-actuators.steer * P.STEER_MAX, P.STEER_LOOKUP_BP, P.STEER_LOOKUP_V))
+    apply_brake = int(clip(self.brake_last * self.P.BRAKE_MAX, 0, self.P.BRAKE_MAX - 1))
+    apply_steer = int(interp(-actuators.steer * self.P.STEER_MAX, self.P.STEER_LOOKUP_BP, self.P.STEER_LOOKUP_V))
 
     lkas_active = enabled and not CS.steer_not_allowed
 

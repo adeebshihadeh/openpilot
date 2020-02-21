@@ -104,10 +104,6 @@ class CarInterface(CarInterfaceBase):
 
     events = self.create_common_events(ret, extra_gears=[GEAR.eco, GEAR.sport])
 
-    # Vehicle operation safety checks and events
-    if self.CS.parkingBrakeSet:
-      events.append(create_event('parkBrake', [ET.NO_ENTRY, ET.USER_DISABLE]))
-
     # Vehicle health safety checks and events
     if self.CS.accFault:
       events.append(create_event('radarFault', [ET.NO_ENTRY, ET.IMMEDIATE_DISABLE]))

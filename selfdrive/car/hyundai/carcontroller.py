@@ -8,7 +8,6 @@ class CarController():
   def __init__(self, dbc_name, CP, VM):
     self.apply_steer_last = 0
     self.car_fingerprint = CP.carFingerprint
-    self.lkas11_cnt = 0
     self.cnt = 0
     self.last_resume_cnt = 0
     self.packer = CANPacker(dbc_name)
@@ -30,10 +29,8 @@ class CarController():
 
     can_sends = []
 
-    self.lkas11_cnt = self.cnt % 0x10
-    self.clu11_cnt = self.cnt % 0x10
-
-    can_sends.append(create_lkas11(self.packer, self.car_fingerprint, apply_steer, steer_req, self.lkas11_cnt,
+    lkas11_cnt = self.cnt % 0x10
+    can_sends.append(create_lkas11(self.packer, self.car_fingerprint, apply_steer, steer_req, lkas11_cnt,
                                    enabled, CS.lkas11, hud_alert, keep_stock=True))
 
     if pcm_cancel_cmd:

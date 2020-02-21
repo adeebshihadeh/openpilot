@@ -102,7 +102,6 @@ class CarState(CarStateBase):
     self.clu11 = cp.vl["CLU11"]
     self.esp_disabled = cp.vl["TCS15"]['ESC_Off_Step']
     self.park_brake = cp.vl["CGW1"]['CF_Gway_ParkBrakeSw']
-    self.steer_state = cp.vl["MDPS12"]['CF_Mdps_ToiActive'] #0 NOT ACTIVE, 1 ACTIVE
     self.steer_warning = cp.vl["MDPS12"]['CF_Mdps_ToiUnavail']
     self.brake_error = 0
 
