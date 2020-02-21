@@ -172,7 +172,6 @@ class CarInterface(CarInterfaceBase):
         events.append(create_event('pcmDisable', [ET.USER_DISABLE]))
 
     else:
-      # TODO: why is this only not supercruise? ignore supercruise?
       if ret.vEgo < self.CP.minEnableSpeed:
         events.append(create_event('speedTooLow', [ET.NO_ENTRY]))
       # disable on pedals rising edge or when brake is pressed and speed isn't zero

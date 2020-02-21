@@ -92,7 +92,7 @@ class CarController():
       lkas_enabled = enabled and not CS.steer_not_allowed and CS.out.vEgo > self.P.MIN_STEER_SPEED
       if lkas_enabled:
         new_steer = actuators.steer * self.P.STEER_MAX
-        apply_steer = apply_std_steer_torque_limits(new_steer, self.apply_steer_last, CS.out.steeringTorque, P)
+        apply_steer = apply_std_steer_torque_limits(new_steer, self.apply_steer_last, CS.out.steeringTorque, self.P)
         self.steer_rate_limited = new_steer != apply_steer
       else:
         apply_steer = 0
