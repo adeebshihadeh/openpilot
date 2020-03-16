@@ -250,7 +250,7 @@ def uploader_fn(exit_event):
 
     d = uploader.next_file_to_upload(with_raw=allow_raw_upload and should_upload)
     if d is None:
-      time.sleep(5)
+      time.sleep(30)
       continue
 
     key, fn = d
