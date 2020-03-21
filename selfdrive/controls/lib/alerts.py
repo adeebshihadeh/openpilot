@@ -439,6 +439,13 @@ ALERTS = [
       AlertStatus.critical, AlertSize.full,
       Priority.MID, VisualAlert.steerRequired, AudibleAlert.chimeWarningRepeat, .1, 2., 2.),
 
+  Alert(
+      "speedTooHigh",
+      "TAKE CONTROL IMMEDIATELY",
+      "Speed Too High: Lower Speed",
+      AlertStatus.critical, AlertSize.full,
+      Priority.MID, VisualAlert.steerRequired, AudibleAlert.chimeWarningRepeat, .1, 2., 2.),
+
   # Cancellation alerts causing immediate disabling
   Alert(
       "controlsFailed",
@@ -684,6 +691,13 @@ ALERTS = [
       "lowMemoryNoEntry",
       "openpilot Unavailable",
       "Low Memory: Reboot Your Device",
+      AlertStatus.normal, AlertSize.mid,
+      Priority.LOW, VisualAlert.none, AudibleAlert.chimeDisengage, .4, 2., 3.),
+
+  Alert(
+      "speedTooHighNoEntry",
+      "openpilot Unavailable",
+      "Speed Too High: Lower Speed to Engage",
       AlertStatus.normal, AlertSize.mid,
       Priority.LOW, VisualAlert.none, AudibleAlert.chimeDisengage, .4, 2., 3.),
 
