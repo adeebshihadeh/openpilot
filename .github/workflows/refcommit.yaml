@@ -1,0 +1,22 @@
+name: ref_commit bot
+
+on:
+  issue_comment:
+    types: [created]
+
+jobs:
+  ref_commit:
+    runs-on: ubuntu-16.04
+    if: contains(github.event.comment.body, '/refcommit')
+    - uses: actions/checkout@v2
+    steps:
+      - name: Update ref commit
+        run: |
+          touch test_file
+          git config --local user.name "batman"
+          git commit -m "update ref_commit"
+      - name: Push updated ref commit
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+
