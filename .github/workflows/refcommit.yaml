@@ -14,6 +14,7 @@ jobs:
         run: |
           touch test_file
           git config --local user.name "batman"
+          git add test_file
           git commit -m "update ref_commit"
       - name: Push updated ref commit
         uses: ad-m/github-push-action@master
