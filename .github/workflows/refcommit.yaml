@@ -8,10 +8,13 @@ jobs:
   ref_commit:
     runs-on: ubuntu-16.04
     if: contains(github.event.comment.body, '/refcommit')
+    env:
+      BRANCH: ${{ github.ref }}
     steps:
       - uses: actions/checkout@v2
       - name: Update ref commit
         run: |
+          echo "branch '$BRANCH'"
           touch test_file
           git config --local user.name "batman"
           git add test_file
@@ -20,4 +23,6 @@ jobs:
         uses: ad-m/github-push-action@master
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
+          branch: ${{ github.ref }}
+          repository: ${{  github.repository }}
 
