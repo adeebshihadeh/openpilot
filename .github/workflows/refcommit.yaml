@@ -8,8 +8,8 @@ jobs:
   ref_commit:
     runs-on: ubuntu-16.04
     if: contains(github.event.comment.body, '/refcommit')
-    - uses: actions/checkout@v2
     steps:
+      - uses: actions/checkout@v2
       - name: Update ref commit
         run: |
           touch test_file
