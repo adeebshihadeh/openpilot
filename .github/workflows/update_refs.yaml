@@ -49,6 +49,8 @@ jobs:
       #    docker cp $CONTAINER_NAME:/tmp/openpilot/selfdrive/test/process_replay/ref_commit selfdrive/test/process_replay/ref_commit
       - name: Push ref commit
         run: |
+          pwd
+          ls
           echo "new hash" > selfdrive/test/process_replay/ref_commit
           git diff
           git config --local user.name "comma tester"
