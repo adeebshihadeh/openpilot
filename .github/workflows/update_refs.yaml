@@ -1,0 +1,34 @@
+name: process replay update
+
+on:
+  issue_comment:
+    types: [created]
+
+env:
+  RUN: docker run --shm-size 1G --rm tmppilot /bin/sh -c
+  LOAD: docker load -i tmppilot.tar.gz/tmppilot.tar.gz
+
+jobs:
+
+  build:
+    name: build
+    runs-on: ubuntu-16.04
+    if: contains(github.event.comment.body, '/update_refs')
+    steps:
+    - uses: actions/checkout@v2
+    - name: Checkout submodules
+      run: |
+        git submodule update --init
+    - name: Build docker image
+      run: |
+        docker pull $(grep -ioP '(?<=^from)\s+\S+' Dockerfile.openpilot) || true
+        docker pull docker.io/commaai/openpilot:latest || true
+
+        docker build --cache-from docker.io/commaai/openpilot:latest -t tmppilot -f Dockerfile.openpilot .
+        docker save tmppilot:latest | gzip > tmppilot.tar.gz
+    - uses: actions/upload-artifact@v1
+      with:
+        name: tmppilot.tar.gz
+        path: tmppilot.tar.gz
+
+
