@@ -97,7 +97,8 @@ jobs:
       - name: Run replay
         run: |
           CONTAINER_NAME="tmppilot_${GITHUB_SHA}"
-          docker run --shm-size 1G --name ${CONTAINER_NAME} tmppilot /bin/sh -c "cd /tmp/openpilot/selfdrive/test/process_replay && CI=1 ./test_processes.py"
+          docker run --shm-size 1G --name ${CONTAINER_NAME} tmppilot /bin/sh -c \
+                "cd /tmp/openpilot/selfdrive/test/process_replay && CI=1 ./test_processes.py"
       - name: Copy diff
         if: always()
         run: |
@@ -127,7 +128,8 @@ jobs:
       - name: Test longitudinal
         run: |
           CONTAINER_NAME="tmppilot_${GITHUB_SHA}"
-          docker run --shm-size 1G --name ${CONTAINER_NAME} tmppilot /bin/sh -c "cd /tmp/openpilot/selfdrive/test/longitudinal_maneuvers && OPTEST=1 ./test_longitudinal.py"
+          docker run --shm-size 1G --name ${CONTAINER_NAME} tmppilot /bin/sh -c \
+                  "cd /tmp/openpilot/selfdrive/test/longitudinal_maneuvers && OPTEST=1 ./test_longitudinal.py"
       - name: Copy artifacts
         if: always()
         run: |
