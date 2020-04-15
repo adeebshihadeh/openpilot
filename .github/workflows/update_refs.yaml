@@ -51,11 +51,11 @@ jobs:
         run: |
           pwd
           ls
-          echo "new hash" > selfdrive/test/process_replay/ref_commit
-          git diff
-          git config --local user.name "comma tester"
-          git add selfdrive/test/process_replay/ref_commit
-          git commit -m "update ref_commit"
+          #echo "new hash" > selfdrive/test/process_replay/ref_commit
+          #git diff
+          #git config --local user.name "comma tester"
+          #git add selfdrive/test/process_replay/ref_commit
+          #git commit -m "update ref_commit"
       - name: Git push
         uses: ad-m/github-push-action@master
         with:
