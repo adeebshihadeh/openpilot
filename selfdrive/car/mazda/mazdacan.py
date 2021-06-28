@@ -13,8 +13,6 @@ def create_steering_control(packer, car_fingerprint, frame, apply_steer, lkas):
   lnv = 0
   er2 = int(lkas["ERR_BIT_2"])
 
-  # Some older models do have these, newer models don't.
-  # Either way, they all work just fine if set to zero.
   steering_angle = 0
   b2 = 0
 
@@ -57,6 +55,20 @@ def create_steering_control(packer, car_fingerprint, frame, apply_steer, lkas):
     }
 
   return packer.make_can_msg("CAM_LKAS", 0, values)
+
+def create_ti_steering_control(packer, car_fingerprint, apply_steer):
+
+  key = 3294744160
+  chksum = apply_steer
+
+  if car_fingerprint in GEN1:
+    values = {
+        "LKAS_REQUEST"     : apply_steer,
+        "CHKSUM"           : chksum,
+        "KEY"              : key
+     }
+
+  return packer.make_can_msg("CAM_LKAS2", 0, values)
 
 
 def create_button_cmd(packer, car_fingerprint, button):

@@ -1,7 +1,9 @@
 // CAN msgs we care about
 #define MAZDA_LKAS          0x243
+#define MAZDA_LKAS2         0x249
 #define MAZDA_CRZ_CTRL      0x21c
 #define MAZDA_CRZ_BTNS      0x09d
+#define TI_STEER_TORQUE     0x24A
 #define MAZDA_STEER_TORQUE  0x240
 #define MAZDA_ENGINE_DATA   0x202
 #define MAZDA_PEDALS        0x165
@@ -27,8 +29,11 @@
 #define MAZDA_LKAS_ENABLE_SPEED  5200
 #define MAZDA_LKAS_DISABLE_SPEED 4500
 
-const CanMsg MAZDA_TX_MSGS[] = {{MAZDA_LKAS, 0, 8}, {MAZDA_CRZ_BTNS, 0, 8}};
-bool mazda_lkas_allowed = false;
+#define TI_LKAS_ENABLE_SPEED  2800
+#define TI_LKAS_DISABLE_SPEED 2300
+
+const CanMsg MAZDA_TX_MSGS[] = {{MAZDA_LKAS, 0, 8}, {MAZDA_CRZ_BTNS, 0, 8}, {MAZDA_LKAS2, 0, 8}};
+bool mazda_lkas_allowed = true;
 
 AddrCheckStruct mazda_rx_checks[] = {
   {.msg = {{MAZDA_CRZ_CTRL,     0, 8, .expected_timestep = 20000U}, { 0 }, { 0 }}},
@@ -38,11 +43,27 @@ AddrCheckStruct mazda_rx_checks[] = {
   {.msg = {{MAZDA_PEDALS,       0, 8, .expected_timestep = 20000U}, { 0 }, { 0 }}},
 };
 const int MAZDA_RX_CHECKS_LEN = sizeof(mazda_rx_checks) / sizeof(mazda_rx_checks[0]);
-
+//not used///////////////////
+AddrCheckStruct mazda_ti_rx_checks[] = {
+  {.msg = {{MAZDA_CRZ_CTRL,     0, 8, .expected_timestep = 20000U}}},
+  {.msg = {{MAZDA_CRZ_BTNS,     0, 8, .expected_timestep = 100000U}}},
+  {.msg = {{MAZDA_STEER_TORQUE, 0, 8, .expected_timestep = 12000U}}},
+  {.msg = {{MAZDA_ENGINE_DATA,  0, 8, .expected_timestep = 10000U}}},
+  {.msg = {{MAZDA_PEDALS,       0, 8, .expected_timestep = 20000U}}},
+  {.msg = {{TI_STEER_TORQUE,    0, 8, .expected_timestep = 72000U}}},
+};
+const int MAZDA_TI_RX_CHECKS_LEN = sizeof(mazda_ti_rx_checks) / sizeof(mazda_ti_rx_checks[0]);
+////////////////////////////
 // track msgs coming from OP so that we know what CAM msgs to drop and what to forward
 static int mazda_rx_hook(CAN_FIFOMailBox_TypeDef *to_push) {
   bool valid = addr_safety_check(to_push, mazda_rx_checks, MAZDA_RX_CHECKS_LEN,
                             NULL, NULL, NULL);
+  if (GET_ADDR(to_push) == TI_STEER_TORQUE){
+    if (GET_BYTE(to_push, 0) == GET_BYTE(to_push, 1)){
+      torque_interceptor_detected = 1;
+      valid = true;
+    }
+  }
   if (valid && (GET_BUS(to_push) == MAZDA_MAIN)) {
     int addr = GET_ADDR(to_push);
 
@@ -56,16 +77,24 @@ static int mazda_rx_hook(CAN_FIFOMailBox_TypeDef *to_push) {
       if (speed > MAZDA_LKAS_ENABLE_SPEED) {
         mazda_lkas_allowed = true;
       } else if (speed < MAZDA_LKAS_DISABLE_SPEED) {
-        mazda_lkas_allowed = false;
+        //mazda_lkas_allowed = false;
+      } else if((speed > TI_LKAS_ENABLE_SPEED) && (torque_interceptor_detected)) {
+        mazda_lkas_allowed = true;
       } else {
         // Misra-able appeasment block!
       }
     }
 
-    if (addr == MAZDA_STEER_TORQUE) {
-      int torque_driver_new = GET_BYTE(to_push, 0) - 127;
+    if ((addr == TI_STEER_TORQUE) && (torque_interceptor_detected)) {
+      int torque_driver_new = GET_BYTE(to_push, 0) - 126;
+      // update array of samples
+	    update_sample(&torque_driver, torque_driver_new);
+    } else if (addr == MAZDA_STEER_TORQUE) {
+	    int torque_driver_new = GET_BYTE(to_push, 0) - 127;
       // update array of samples
       update_sample(&torque_driver, torque_driver_new);
+    } else {
+        // Misra-able appeasment block
     }
 
     // enter controls on rising edge of ACC, exit controls on ACC off
@@ -187,7 +216,8 @@ static void mazda_init(int16_t param) {
   UNUSED(param);
   controls_allowed = false;
   relay_malfunction_reset();
-  mazda_lkas_allowed = false;
+  mazda_lkas_allowed = true;
+  torque_interceptor_detected = 0;
 }
 
 const safety_hooks mazda_hooks = {

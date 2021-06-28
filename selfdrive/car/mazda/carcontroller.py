@@ -1,7 +1,7 @@
 from selfdrive.car.mazda import mazdacan
 from selfdrive.car.mazda.values import CarControllerParams, Buttons
 from opendbc.can.packer import CANPacker
-from selfdrive.car import apply_std_steer_torque_limits
+from selfdrive.car import apply_std_steer_torque_limits, apply_ti_steer_torque_limits
 
 class CarController():
   def __init__(self, dbc_name, CP, VM):
@@ -18,9 +18,14 @@ class CarController():
 
     if enabled:
       # calculate steer and also set limits due to driver torque
-      new_steer = int(round(actuators.steer * CarControllerParams.STEER_MAX))
-      apply_steer = apply_std_steer_torque_limits(new_steer, self.apply_steer_last,
-                                                  CS.out.steeringTorque, CarControllerParams)
+      if CS.CP.enableTorqueInterceptor:
+        new_steer = int(round(actuators.steer * CarControllerParams.TI_STEER_MAX))
+        apply_steer = apply_ti_steer_torque_limits(new_steer, self.apply_steer_last,
+                                                    CS.out.steeringTorque, CarControllerParams)
+      else:
+        new_steer = int(round(actuators.steer * CarControllerParams.STEER_MAX))
+        apply_steer = apply_std_steer_torque_limits(new_steer, self.apply_steer_last,
+                                                    CS.out.steeringTorque, CarControllerParams)
       self.steer_rate_limited = new_steer != apply_steer
 
       if CS.out.standstill and frame % 5 == 0:
@@ -37,7 +42,20 @@ class CarController():
         can_sends.append(mazdacan.create_button_cmd(self.packer, CS.CP.carFingerprint, Buttons.CANCEL))
 
     self.apply_steer_last = apply_steer
+    
+    #if ti is enabled we don't have to send apply steer to the stock system but a signal should still be sent.
+    if CS.CP.enableTorqueInterceptor:
+      can_sends.append(mazdacan.create_ti_steering_control(self.packer, CS.CP.carFingerprint,apply_steer))
 
-    can_sends.append(mazdacan.create_steering_control(self.packer, CS.CP.carFingerprint,
-                                                      frame, apply_steer, CS.cam_lkas))
+      apply_steer = 0
+      can_sends.append(mazdacan.create_steering_control(self.packer, CS.CP.carFingerprint,
+                                                        frame, apply_steer, CS.cam_lkas))
+    else:
+      #The ti cannot be detected unless OP sends a can message to it becasue the ti only transmits when it 
+      #sees the signature key in the designated address range.
+      can_sends.append(mazdacan.create_steering_control(self.packer, CS.CP.carFingerprint,
+                                                        frame, apply_steer, CS.cam_lkas))
+      apply_steer = 0
+      can_sends.append(mazdacan.create_ti_steering_control(self.packer, CS.CP.carFingerprint, apply_steer))
+
     return can_sends

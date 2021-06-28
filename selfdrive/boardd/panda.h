@@ -37,6 +37,7 @@ struct __attribute__((packed)) health_t {
   uint8_t fault_status;
   uint8_t power_save_enabled;
   uint8_t heartbeat_lost;
+  uint8_t torque_interceptor_detected;
 };
 
 

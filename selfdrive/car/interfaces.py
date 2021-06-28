@@ -88,7 +88,12 @@ class CarInterfaceBase():
     ret.longitudinalTuning.kpV = [1.]
     ret.longitudinalTuning.kiBP = [0.]
     ret.longitudinalTuning.kiV = [1.]
+
+    #No Torque Interceptor by default
+    ret.enableTorqueInterceptor = False
     return ret
+
+  
 
   # returns a car.CarState, pass in car.CarControl
   def update(self, c, can_strings):
@@ -181,6 +186,7 @@ class CarStateBase:
     self.right_blinker_cnt = 0
     self.left_blinker_prev = False
     self.right_blinker_prev = False
+    #self.tiAllowed = car.CarState.
 
     # Q = np.matrix([[10.0, 0.0], [0.0, 100.0]])
     # R = 1e3

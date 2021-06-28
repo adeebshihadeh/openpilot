@@ -17,7 +17,6 @@ class CarState(CarStateBase):
     self.low_speed_lockout = True
     self.low_speed_alert = False
     self.lkas_allowed = False
-
   def update(self, cp, cp_cam):
 
     ret = car.CarState.new_message()
@@ -38,9 +37,14 @@ class CarState(CarStateBase):
     ret.leftBlinker = cp.vl["BLINK_INFO"]["LEFT_BLINK"] == 1
     ret.rightBlinker = cp.vl["BLINK_INFO"]["RIGHT_BLINK"] == 1
 
-    ret.steeringAngleDeg = cp.vl["STEER"]["STEER_ANGLE"]
-    ret.steeringTorque = cp.vl["STEER_TORQUE"]["STEER_TORQUE_SENSOR"]
-    ret.steeringPressed = abs(ret.steeringTorque) > LKAS_LIMITS.STEER_THRESHOLD
+    if self.CP.enableTorqueInterceptor:
+      ret.steeringTorque = cp.vl["TI_FEEDBACK"]["TI_TORQUE_SENSOR"]
+      ret.steeringPressed = abs(ret.steeringTorque) > LKAS_LIMITS.TI_STEER_THRESHOLD
+    else:
+      ret.steeringTorque = cp.vl["STEER_TORQUE"]["STEER_TORQUE_SENSOR"]
+      ret.steeringPressed = abs(ret.steeringTorque) > LKAS_LIMITS.STEER_THRESHOLD
+
+    ret.steeringAngleDeg = cp.vl["STEER"]["STEER_ANGLE"]      
 
     ret.steeringTorqueEps = cp.vl["STEER_TORQUE"]["STEER_TORQUE_MOTOR"]
     ret.steeringRateDeg = cp.vl["STEER_RATE"]["STEER_ANGLE_RATE"]
@@ -110,7 +114,6 @@ class CarState(CarStateBase):
       ("RL", "WHEEL_SPEEDS", 0),
       ("RR", "WHEEL_SPEEDS", 0),
     ]
-
     checks = [
       # sig_address, frequency
       ("BLINK_INFO", 10),
@@ -119,7 +122,6 @@ class CarState(CarStateBase):
       ("STEER_TORQUE", 83),
       ("WHEEL_SPEEDS", 100),
     ]
-
     if CP.carFingerprint in GEN1:
       signals += [
         ("LKAS_BLOCK", "STEER_RATE", 0),
@@ -156,7 +158,16 @@ class CarState(CarStateBase):
         ("GEAR", 20),
         ("BSM", 10),
       ]
+    # get real driver torque if we are using a torque interceptor
+    if CP.enableTorqueInterceptor:
+      signals += [
+          ("TI_TORQUE_SENSOR", "TI_FEEDBACK", 0),
+      ]
 
+      checks += [
+          ("TI_FEEDBACK", 14),
+      ]
+      
     return CANParser(DBC[CP.carFingerprint]["pt"], signals, checks, 0)
 
   @staticmethod

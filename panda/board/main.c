@@ -39,6 +39,7 @@ struct __attribute__((packed)) health_t {
   uint8_t fault_status_pkt;
   uint8_t power_save_enabled_pkt;
   uint8_t heartbeat_lost_pkt;
+  uint8_t torque_interceptor_detected_pkt;
 };
 
 
@@ -163,6 +164,7 @@ int get_health_pkt(void *dat) {
 
   health->controls_allowed_pkt = controls_allowed;
   health->gas_interceptor_detected_pkt = gas_interceptor_detected;
+  health->torque_interceptor_detected_pkt = torque_interceptor_detected;
   health->can_rx_errs_pkt = can_rx_errs;
   health->can_send_errs_pkt = can_send_errs;
   health->can_fwd_errs_pkt = can_fwd_errs;

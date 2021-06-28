@@ -103,6 +103,7 @@ bool brake_pressed_prev = false;
 bool cruise_engaged_prev = false;
 float vehicle_speed = 0;
 bool vehicle_moving = false;
+bool torque_interceptor_detected = false;
 
 // for safety modes with torque steering control
 int desired_torque_last = 0;       // last desired steer torque

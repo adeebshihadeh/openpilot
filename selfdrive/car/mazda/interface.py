@@ -4,6 +4,7 @@ from selfdrive.config import Conversions as CV
 from selfdrive.car.mazda.values import CAR, LKAS_LIMITS
 from selfdrive.car import STD_CARGO_KG, scale_rot_inertia, scale_tire_stiffness, gen_empty_fingerprint
 from selfdrive.car.interfaces import CarInterfaceBase
+from selfdrive import global_ti as TI
 
 ButtonType = car.CarState.ButtonEvent.Type
 EventName = car.CarEvent.EventName
@@ -16,48 +17,94 @@ class CarInterface(CarInterfaceBase):
 
   @staticmethod
   def get_params(candidate, fingerprint=gen_empty_fingerprint(), car_fw=None):
+    print("in get_params, entering get_std_params")
     ret = CarInterfaceBase.get_std_params(candidate, fingerprint)
 
     ret.carName = "mazda"
     ret.safetyModel = car.CarParams.SafetyModel.mazda
-    ret.radarOffCan = True
 
+    ret.radarOffCan = True
     ret.communityFeature = True
-    ret.dashcamOnly = True
+    
+    #ret.enableTorqueInterceptor = 0x24A in fingerprint[0]
+
+    if ret.enableTorqueInterceptor:
+      print("Recieving torque interceptor signal.")
+
+    #ret.dashcamOnly = True
 
     ret.steerActuatorDelay = 0.1
     ret.steerRateCost = 1.0
     ret.steerLimitTimer = 0.8
     tire_stiffness_factor = 0.70   # not optimized yet
 
-    if candidate == CAR.CX5:
-      ret.mass = 3655 * CV.LB_TO_KG + STD_CARGO_KG
-      ret.wheelbase = 2.7
-      ret.steerRatio = 15.5
-      ret.lateralTuning.pid.kiBP, ret.lateralTuning.pid.kpBP = [[0.], [0.]]
-      ret.lateralTuning.pid.kpV, ret.lateralTuning.pid.kiV = [[0.19], [0.019]]
-      ret.lateralTuning.pid.kf = 0.00006
-    elif candidate in [CAR.CX9, CAR.CX9_2021]:
-      ret.mass = 4217 * CV.LB_TO_KG + STD_CARGO_KG
-      ret.wheelbase = 3.1
-      ret.steerRatio = 17.6
-      ret.lateralTuning.pid.kiBP, ret.lateralTuning.pid.kpBP = [[0.], [0.]]
-      ret.lateralTuning.pid.kpV, ret.lateralTuning.pid.kiV = [[0.19], [0.019]]
-      ret.lateralTuning.pid.kf = 0.00006
-    elif candidate == CAR.MAZDA3:
-      ret.mass = 2875 * CV.LB_TO_KG + STD_CARGO_KG
-      ret.wheelbase = 2.7
-      ret.steerRatio = 14.0
-      ret.lateralTuning.pid.kiBP, ret.lateralTuning.pid.kpBP = [[0.], [0.]]
-      ret.lateralTuning.pid.kpV, ret.lateralTuning.pid.kiV = [[0.19], [0.019]]
-      ret.lateralTuning.pid.kf = 0.00006
-    elif candidate == CAR.MAZDA6:
-      ret.mass = 3443 * CV.LB_TO_KG + STD_CARGO_KG
-      ret.wheelbase = 2.83
-      ret.steerRatio = 15.5
-      ret.lateralTuning.pid.kiBP, ret.lateralTuning.pid.kpBP = [[0.], [0.]]
-      ret.lateralTuning.pid.kpV, ret.lateralTuning.pid.kiV = [[0.19], [0.019]]
-      ret.lateralTuning.pid.kf = 0.00006
+    if ret.enableTorqueInterceptor:
+      print("Adjusting PID parameters for TI")
+      if candidate == CAR.CX5:
+        ret.mass = 3655 * CV.LB_TO_KG + STD_CARGO_KG
+        ret.wheelbase = 2.7
+        ret.steerRatio = 15.5
+        ret.lateralTuning.pid.kiBP = [8.0, 30.0]
+        ret.lateralTuning.pid.kpBP = [8.0, 30.0]
+        ret.lateralTuning.pid.kpV = [0.10,0.22]
+        ret.lateralTuning.pid.kiV = [0.01,0.019]
+        ret.lateralTuning.pid.kf = 0.00006
+      elif candidate in [CAR.CX9, CAR.CX9_2021]:
+        ret.mass = 4217 * CV.LB_TO_KG + STD_CARGO_KG
+        ret.wheelbase = 3.1
+        ret.steerRatio = 17.6
+        ret.lateralTuning.pid.kiBP = [8.0, 30.0]
+        ret.lateralTuning.pid.kpBP = [8.0, 30.0]
+        ret.lateralTuning.pid.kpV = [0.10,0.22]
+        ret.lateralTuning.pid.kiV = [0.01,0.019]
+        ret.lateralTuning.pid.kf = 0.00006
+      elif candidate == CAR.MAZDA3:
+        ret.mass = 2875 * CV.LB_TO_KG + STD_CARGO_KG
+        ret.wheelbase = 2.7
+        ret.steerRatio = 14.0
+        ret.lateralTuning.pid.kiBP = [8.0, 30.0]
+        ret.lateralTuning.pid.kpBP = [8.0, 30.0]
+        ret.lateralTuning.pid.kpV = [0.10,0.22]
+        ret.lateralTuning.pid.kiV = [0.01,0.019]
+        ret.lateralTuning.pid.kf = 0.00006
+      elif candidate == CAR.MAZDA6:
+        ret.mass = 3443 * CV.LB_TO_KG + STD_CARGO_KG
+        ret.wheelbase = 2.83
+        ret.steerRatio = 15.5
+        ret.lateralTuning.pid.kiBP = [8.0, 30.0]
+        ret.lateralTuning.pid.kpBP = [8.0, 30.0]
+        ret.lateralTuning.pid.kpV = [0.10,0.22]
+        ret.lateralTuning.pid.kiV = [0.01,0.019]
+        ret.lateralTuning.pid.kf = 0.00006
+    else:
+      if candidate == CAR.CX5:
+        ret.mass = 3655 * CV.LB_TO_KG + STD_CARGO_KG
+        ret.wheelbase = 2.7
+        ret.steerRatio = 15.5
+        ret.lateralTuning.pid.kiBP, ret.lateralTuning.pid.kpBP = [[0.], [0.]]
+        ret.lateralTuning.pid.kpV, ret.lateralTuning.pid.kiV = [[0.19], [0.019]]
+        ret.lateralTuning.pid.kf = 0.00006
+      elif candidate in [CAR.CX9, CAR.CX9_2021]:
+        ret.mass = 4217 * CV.LB_TO_KG + STD_CARGO_KG
+        ret.wheelbase = 3.1
+        ret.steerRatio = 17.6
+        ret.lateralTuning.pid.kiBP, ret.lateralTuning.pid.kpBP = [[0.], [0.]]
+        ret.lateralTuning.pid.kpV, ret.lateralTuning.pid.kiV = [[0.19], [0.019]]
+        ret.lateralTuning.pid.kf = 0.00006
+      elif candidate == CAR.MAZDA3:
+        ret.mass = 2875 * CV.LB_TO_KG + STD_CARGO_KG
+        ret.wheelbase = 2.7
+        ret.steerRatio = 14.0
+        ret.lateralTuning.pid.kiBP, ret.lateralTuning.pid.kpBP = [[0.], [0.]]
+        ret.lateralTuning.pid.kpV, ret.lateralTuning.pid.kiV = [[0.19], [0.019]]
+        ret.lateralTuning.pid.kf = 0.00006
+      elif candidate == CAR.MAZDA6:
+        ret.mass = 3443 * CV.LB_TO_KG + STD_CARGO_KG
+        ret.wheelbase = 2.83
+        ret.steerRatio = 15.5
+        ret.lateralTuning.pid.kiBP, ret.lateralTuning.pid.kpBP = [[0.], [0.]]
+        ret.lateralTuning.pid.kpV, ret.lateralTuning.pid.kiV = [[0.19], [0.019]]
+        ret.lateralTuning.pid.kf = 0.00006
 
     # No steer below disable speed
     ret.minSteerSpeed = LKAS_LIMITS.DISABLE_SPEED * CV.KPH_TO_MS
@@ -80,7 +127,9 @@ class CarInterface(CarInterfaceBase):
 
     self.cp.update_strings(can_strings)
     self.cp_cam.update_strings(can_strings)
-
+    if self.CP.enableTorqueInterceptor and not TI.enabled:
+      TI.enabled = True
+      self.cp = self.CS.get_can_parser(self.CP)
     ret = self.CS.update(self.cp, self.cp_cam)
     ret.canValid = self.cp.can_valid and self.cp_cam.can_valid
 
