@@ -22,6 +22,7 @@ class CarInterface(CarInterfaceBase):
 
     ret.carName = "mazda"
     ret.safetyModel = car.CarParams.SafetyModel.mazda
+    #ret.dashcamOnly = candidate in STEER_LOCK_CAR
 
     ret.radarOffCan = True
     ret.communityFeature = True
@@ -30,8 +31,6 @@ class CarInterface(CarInterfaceBase):
 
     if ret.enableTorqueInterceptor:
       print("Recieving torque interceptor signal.")
-
-    #ret.dashcamOnly = True
 
     ret.steerActuatorDelay = 0.1
     ret.steerRateCost = 1.0
@@ -136,8 +135,8 @@ class CarInterface(CarInterfaceBase):
     # events
     events = self.create_common_events(ret)
 
-    if self.CS.low_speed_lockout:
-      events.add(EventName.belowEngageSpeed)
+    #if self.CS.low_speed_lockout:
+    #  events.add(EventName.belowEngageSpeed)
 
     if self.CS.low_speed_alert:
       events.add(EventName.belowSteerSpeed)

@@ -31,11 +31,11 @@ class CAR:
 
 class LKAS_LIMITS:
   STEER_THRESHOLD = 15
-  DISABLE_SPEED = 23    # kph
-  ENABLE_SPEED = 28     # kph
+  DISABLE_SPEED = 0    # kph
+  ENABLE_SPEED = 0     # kph
   TI_STEER_THRESHOLD = 15
-  TI_DISABLE_SPEED = 23    # kph
-  TI_ENABLE_SPEED = 28     # kph
+  TI_DISABLE_SPEED = 0    # kph
+  TI_ENABLE_SPEED = 0     # kph
 
 
 class Buttons:
