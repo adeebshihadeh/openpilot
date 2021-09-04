@@ -17,6 +17,12 @@ class CarState(CarStateBase):
     self.low_speed_lockout = True
     self.low_speed_alert = False
     self.lkas_allowed = False
+    self.pre_enable = False
+    self.ti_ramp_down = False
+    self.ti_version = 1
+    self.ti_state = 0
+    self.ti_violation = 0
+    self.ti_error = 0
   def update(self, cp, cp_cam):
 
     ret = car.CarState.new_message()
@@ -39,7 +45,18 @@ class CarState(CarStateBase):
 
     if self.CP.enableTorqueInterceptor:
       ret.steeringTorque = cp.vl["TI_FEEDBACK"]["TI_TORQUE_SENSOR"]
+
+      self.ti_version = cp.vl["TI_FEEDBACK"]["VERSION_NUMBER"]
+      self.ti_state = cp.vl["TI_FEEDBACK"]["STATE"] # DISCOVER = 0, OFF = 1, DRIVER_OVER = 2, RUN=3
+      self.ti_violation = cp.vl["TI_FEEDBACK"]["VIOL"] # 0 = no violation
+      self.ti_error = cp.vl["TI_FEEDBACK"]["ERROR"] # 0 = no error
+      if self.ti_version > 1:
+        self.ti_ramp_down = cp.vl["TI_FEEDBACK"]["RAMP_DOWN"] # when TI is ramping down, appy_torque must = 0.
+        if (self.ti_state < 3) or (self.ti_ramp_down):
+          self.pre_enable = True
+          print("true")
       ret.steeringPressed = abs(ret.steeringTorque) > LKAS_LIMITS.TI_STEER_THRESHOLD
+
     else:
       ret.steeringTorque = cp.vl["STEER_TORQUE"]["STEER_TORQUE_SENSOR"]
       ret.steeringPressed = abs(ret.steeringTorque) > LKAS_LIMITS.STEER_THRESHOLD
@@ -57,7 +74,7 @@ class CarState(CarStateBase):
                         cp.vl["DOORS"]["BL"], cp.vl["DOORS"]["BR"]])
 
     ret.gas = cp.vl["ENGINE_DATA"]["PEDAL_GAS"]
-    ret.gasPressed = ret.gas > 0
+    ret.gasPressed = (ret.gas > 0) or (self.pre_enable)
 
     ret.leftBlindspot = cp.vl["BSM"]["LEFT_BS1"] == 1
     ret.rightBlindspot = cp.vl["BSM"]["RIGHT_BS1"] == 1
@@ -162,6 +179,13 @@ class CarState(CarStateBase):
     if CP.enableTorqueInterceptor:
       signals += [
           ("TI_TORQUE_SENSOR", "TI_FEEDBACK", 0),
+          ("CHKSUM", "TI_FEEDBACK", 0),
+          ("VERSION_NUMBER", "TI_FEEDBACK", 0),
+          ("STATE", "TI_FEEDBACK", 0),
+          ("VIOL", "TI_FEEDBACK", 0),
+          ("ERROR", "TI_FEEDBACK", 0),
+          ("RAMP_DOWN", "TI_FEEDBACK", 0),
+
       ]
 
       checks += [

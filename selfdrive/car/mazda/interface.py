@@ -137,6 +137,10 @@ class CarInterface(CarInterfaceBase):
 
     #if self.CS.low_speed_lockout:
     #  events.add(EventName.belowEngageSpeed)
+    if self.CS.ti_ramp_down:
+      events.add(EventName.tiRampDown)
+    if self.CS.ti_state == 2:
+      events.add(EventName.tiOverRide)
 
     if self.CS.low_speed_alert:
       events.add(EventName.belowSteerSpeed)
