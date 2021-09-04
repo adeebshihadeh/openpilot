@@ -612,6 +612,14 @@ EVENTS: Dict[int, Dict[str, Union[Alert, Callable[[Any, messaging.SubMaster, boo
     ET.NO_ENTRY: NoEntryAlert("Speed Too Low"),
   },
 
+  EventName.tiRampDown: {
+    ET.PRE_ENABLE: Alert(
+      "Torque Interceptor is Ramping Down",
+      AlertStatus.normal, AlertSize.mid,
+      Priority.LOWEST, VisualAlert.none, AudibleAlert.chimePrompt, 1.0, 1.0, 1.0, 1.0),
+  },
+
+
   EventName.sensorDataInvalid: {
     ET.PERMANENT: Alert(
       "No Data from Device Sensors",
