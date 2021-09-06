@@ -17,7 +17,7 @@ class CarState(CarStateBase):
     self.low_speed_lockout = True
     self.low_speed_alert = False
     self.lkas_allowed = False
-    
+
     self.ti_ramp_down = False
     self.ti_version = 1
     self.ti_state = 0
