@@ -21,8 +21,6 @@ class LatControlPID():
     pid_log.steeringAngleDeg = float(CS.steeringAngleDeg)
     pid_log.steeringRateDeg = float(CS.steeringRateDeg)
 
-    self.your_live_tunable_variable = self.op_params.get('whatever_param')
-
     angle_steers_des_no_offset = math.degrees(VM.get_steer_from_curvature(-desired_curvature, CS.vEgo))
     angle_steers_des = angle_steers_des_no_offset + params.angleOffsetDeg
 
