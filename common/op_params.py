@@ -98,9 +98,7 @@ class opParams:
     """
 
     self.fork_params = {
-      'camera_offset': Param(0.06, NUMBER, 'Your camera offset to use in lane_planner.py', live=True),  # this updates every sec
-      'a_toggle_param': Param(False, bool, 'A toggle for a feature'),  # with no live or static specified, this updates every 10 sec
-      'a_static_toggle': Param(False, bool, 'Another toggle for a feature, gotten on start up', static=True),  # this is only read once when opParams in initialized
+      'live_tuning_toggle': Param(False, bool, 'A toggle for a feature', live=True),
       'lat_p': Param(0.1, NUMBER, '', live=True),
       'lat_i': Param(0.01, NUMBER, '', live=True),
       'lat_f': Param(0.00006, NUMBER, '', live=True),

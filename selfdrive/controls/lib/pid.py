@@ -32,13 +32,21 @@ class PIController():
 
   @property
   def k_p(self):
-    return self.op_params.get('lat_p')
-    # return interp(self.speed, self._k_p[0], self._k_p[1])
+    if self.op_params.get('live_tuning_toggle'):
+      return self.op_params.get('lat_p')
+    else:
+      return interp(self.speed, self._k_p[0], self._k_p[1])
 
   @property
   def k_i(self):
-    return self.op_params.get('lat_i')
-    # return interp(self.speed, self._k_i[0], self._k_i[1])
+    if self.op_params.get('live_tuning_toggle'):
+      return self.op_params.get('lat_i')
+    else:
+      return interp(self.speed, self._k_i[0], self._k_i[1])
+
+  @property
+  def k_f(self):
+    return self.op_params.get('lat_f') 
 
   def _check_saturation(self, control, check_saturation, error):
     saturated = (control < self.neg_limit) or (control > self.pos_limit)
