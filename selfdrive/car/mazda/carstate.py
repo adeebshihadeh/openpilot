@@ -50,8 +50,9 @@ class CarState(CarStateBase):
       self.ti_state = cp.vl["TI_FEEDBACK"]["STATE"] # DISCOVER = 0, OFF = 1, DRIVER_OVER = 2, RUN=3
       self.ti_violation = cp.vl["TI_FEEDBACK"]["VIOL"] # 0 = no violation
       self.ti_error = cp.vl["TI_FEEDBACK"]["ERROR"] # 0 = no error
-      self.ti_ramp_down = cp.vl["TI_FEEDBACK"]["RAMP_DOWN"] # when TI is ramping down, appy_torque must = 0.
-      print("self.ti_ramp_down")
+      if self.ti_version > 1:
+        self.ti_ramp_down = cp.vl["TI_FEEDBACK"]["RAMP_DOWN"]
+          
       ret.steeringPressed = abs(ret.steeringTorque) > LKAS_LIMITS.TI_STEER_THRESHOLD
 
     else:
@@ -71,7 +72,7 @@ class CarState(CarStateBase):
                         cp.vl["DOORS"]["BL"], cp.vl["DOORS"]["BR"]])
 
     ret.gas = cp.vl["ENGINE_DATA"]["PEDAL_GAS"]
-    ret.gasPressed = (ret.gas > 0) or (self.tiRampDown == 1)
+    ret.gasPressed = (ret.gas > 0)
 
     ret.leftBlindspot = cp.vl["BSM"]["LEFT_BS1"] == 1
     ret.rightBlindspot = cp.vl["BSM"]["RIGHT_BS1"] == 1
