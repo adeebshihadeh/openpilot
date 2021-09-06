@@ -44,9 +44,6 @@ class PIController():
     else:
       return interp(self.speed, self._k_i[0], self._k_i[1])
 
-  @property
-  def k_f(self):
-    return self.op_params.get('lat_f') 
 
   def _check_saturation(self, control, check_saturation, error):
     saturated = (control < self.neg_limit) or (control > self.pos_limit)
