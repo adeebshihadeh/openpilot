@@ -64,7 +64,7 @@ class CarInterface(CarInterfaceBase):
         ret.lateralTuning.pid.kiBP = [8.0, 22.0]
         ret.lateralTuning.pid.kpBP = [8.0, 22.0]
         ret.lateralTuning.pid.kpV = [0.1,0.28]
-        ret.lateralTuning.pid.kiV = [0.09,0.01]
+        ret.lateralTuning.pid.kiV = [0.05,0.02]
         ret.lateralTuning.pid.kf = 0.00006
       elif candidate == CAR.MAZDA6:
         ret.mass = 3443 * CV.LB_TO_KG + STD_CARGO_KG
