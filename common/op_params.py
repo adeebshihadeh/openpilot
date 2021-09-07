@@ -99,9 +99,13 @@ class opParams:
 
     self.fork_params = {
       'live_tuning_toggle': Param(False, bool, 'A toggle for a feature', live=True),
-      'lat_p': Param(0.1, NUMBER, '', live=True),
-      'lat_i': Param(0.01, NUMBER, '', live=True),
+      'low_speed_lat_p': Param(0.1, NUMBER, '', live=True),
+      'low_speed_lat_i': Param(0.09, NUMBER, '', live=True),
+      'high_speed_lat_p': Param(0.28, NUMBER, '', live=True),
+      'high_speed_lat_i': Param(0.01, NUMBER, '', live=True),
       'lat_f': Param(0.00006, NUMBER, '', live=True),
+
+
 
     }
 
