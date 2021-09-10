@@ -32,11 +32,13 @@ class PIController():
 
   @property
   def k_p(self):
-    return interp(self.speed, self._k_p[0], self._k_p[1])
+    return self.op_params.get('lat_p')
+    #return interp(self.speed, self._k_p[0], self._k_p[1])
 
   @property
   def k_i(self):
-    return interp(self.speed, self._k_i[0], self._k_i[1])
+    return self.op_params.get('lat_i')
+    #return interp(self.speed, self._k_i[0], self._k_i[1])
 
 
   def _check_saturation(self, control, check_saturation, error):
@@ -64,11 +66,9 @@ class PIController():
 
     error = float(apply_deadzone(setpoint - measurement, deadzone))
     self.p = error * self.k_p
-    #if self.op_params.get('live_tuning_toggle'):
-      #self.op_params.get('lat_f')    
-    #else:
-    self.f = feedforward * self.k_f
-
+    #self.f = feedforward * self.k_f
+    self.f = feedforward * self.op_params.get('lat_f')
+    
     if override:
       self.i -= self.i_unwind_rate * float(np.sign(self.i))
     else:
