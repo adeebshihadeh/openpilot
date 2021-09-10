@@ -32,7 +32,7 @@ class CarInterface(CarInterfaceBase):
     if ret.enableTorqueInterceptor:
       print("Recieving torque interceptor signal.")
 
-    ret.steerActuatorDelay = 0.1
+    ret.steerActuatorDelay = 0.0
     ret.steerRateCost = 1.0
     ret.steerLimitTimer = 0.8
     tire_stiffness_factor = 0.70   # not optimized yet
@@ -54,18 +54,18 @@ class CarInterface(CarInterfaceBase):
         ret.steerRatio = 17.6
         ret.lateralTuning.pid.kiBP = [8.0, 30.0]
         ret.lateralTuning.pid.kpBP = [8.0, 30.0]
-        ret.lateralTuning.pid.kpV = [0.10,0.22]
+        ret.lateralTuning.pid.kpV = [0.10,0.23]
         ret.lateralTuning.pid.kiV = [0.01,0.019]
         ret.lateralTuning.pid.kf = 0.00006
       elif candidate == CAR.MAZDA3:
         ret.mass = 2875 * CV.LB_TO_KG + STD_CARGO_KG
         ret.wheelbase = 2.7
         ret.steerRatio = 14.0
-        ret.lateralTuning.pid.kiBP = [8.0, 22.0]
-        ret.lateralTuning.pid.kpBP = [8.0, 22.0]
-        ret.lateralTuning.pid.kpV = [0.1,0.28]
-        ret.lateralTuning.pid.kiV = [0.05,0.02]
-        ret.lateralTuning.pid.kf = 0.00006
+        ret.lateralTuning.pid.kiBP = [8.0, 25.0]
+        ret.lateralTuning.pid.kpBP = [8.0, 25.0]
+        ret.lateralTuning.pid.kpV = [0.29,0.23]
+        ret.lateralTuning.pid.kiV = [0.008,0.05]
+        ret.lateralTuning.pid.kf = 0.00003
       elif candidate == CAR.MAZDA6:
         ret.mass = 3443 * CV.LB_TO_KG + STD_CARGO_KG
         ret.wheelbase = 2.83
@@ -94,9 +94,11 @@ class CarInterface(CarInterfaceBase):
         ret.mass = 2875 * CV.LB_TO_KG + STD_CARGO_KG
         ret.wheelbase = 2.7
         ret.steerRatio = 14.0
-        ret.lateralTuning.pid.kiBP, ret.lateralTuning.pid.kpBP = [[0.], [0.]]
-        ret.lateralTuning.pid.kpV, ret.lateralTuning.pid.kiV = [[0.19], [0.019]]
-        ret.lateralTuning.pid.kf = 0.00006
+        ret.lateralTuning.pid.kiBP = [8.0, 25.0]
+        ret.lateralTuning.pid.kpBP = [8.0, 25.0]
+        ret.lateralTuning.pid.kpV = [0.29,0.23]
+        ret.lateralTuning.pid.kiV = [0.008,0.05]
+        ret.lateralTuning.pid.kf = 0.00003
       elif candidate == CAR.MAZDA6:
         ret.mass = 3443 * CV.LB_TO_KG + STD_CARGO_KG
         ret.wheelbase = 2.83
