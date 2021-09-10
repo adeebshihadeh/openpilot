@@ -70,7 +70,7 @@ class CarState(CarStateBase):
                 cp.vl["CRZ_BTNS"]["SET_M"]]):
       self.cruise_speed = ret.vEgoRaw
 
-    ret.cruiseState.available = True
+    ret.cruiseState.available = cp.vl["CRZ_CTRL"]["CRZ_AVAILABLE"] == 1
     ret.cruiseState.enabled = cp.vl["CRZ_CTRL"]["CRZ_ACTIVE"] == 1
     ret.cruiseState.speed = self.cruise_speed
 
@@ -126,6 +126,7 @@ class CarState(CarStateBase):
         ("LKAS_TRACK_STATE", "STEER_RATE", 0),
         ("HANDS_OFF_5_SECONDS", "STEER_RATE", 0),
         ("CRZ_ACTIVE", "CRZ_CTRL", 0),
+        ("CRZ_AVAILABLE", "CRZ_CTRL", 0),
         ("STANDSTILL", "PEDALS", 0),
         ("BRAKE_ON", "PEDALS", 0),
         ("BRAKE_PRESSURE", "BRAKE", 0),

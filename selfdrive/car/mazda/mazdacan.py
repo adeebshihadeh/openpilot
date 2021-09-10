@@ -71,6 +71,11 @@ def create_button_cmd(packer, car_fingerprint, button):
     can = 0
     res = 0
 
+  if button == Buttons.TURN_ON:
+    mode = 1
+  else:
+    mode = 0
+
   if car_fingerprint in GEN1:
     values = {
       "CAN_OFF"           : can,
@@ -91,11 +96,11 @@ def create_button_cmd(packer, car_fingerprint, button):
       "DISTANCE_MORE"     : 0,
       "DISTANCE_MORE_INV" : 1,
 
-      "MODE_X"            : 0,
-      "MODE_X_INV"        : 1,
+      "MODE_X"            : mode,
+      "MODE_X_INV"        : (mode + 1) % 2,
 
-      "MODE_Y"            : 0,
-      "MODE_Y_INV"        : 1,
+      "MODE_Y"            : mode,
+      "MODE_Y_INV"        : (mode + 1) % 2,
 
       "BIT1"              : 1,
       "BIT2"              : 1,

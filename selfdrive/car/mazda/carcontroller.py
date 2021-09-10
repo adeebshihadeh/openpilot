@@ -8,6 +8,7 @@ class CarController():
     self.apply_steer_last = 0
     self.packer = CANPacker(dbc_name)
     self.steer_rate_limited = False
+    self.sent_cancel = False
 
   def update(self, enabled, CS, frame, actuators):
     """ Controls thread """
@@ -31,10 +32,22 @@ class CarController():
     else:
       apply_steer = 0
       self.steer_rate_limited = False
-      if CS.out.cruiseState.enabled and frame % 20 == 0:
-        # Cancel Stock ACC if it's enabled while OP is disengaged
-        # Send at a rate of 5hz until we sync with stock ACC state
-        can_sends.append(mazdacan.create_button_cmd(self.packer, CS.CP.carFingerprint, Buttons.CANCEL))
+      if CS.out.cruiseState.enabled:
+        if frame % 20 == 0:
+          # Cancel Stock ACC if it's enabled while OP is disengaged
+          # Send at a rate of 5hz until we sync with stock ACC state
+          can_sends.append(mazdacan.create_button_cmd(self.packer, CS.CP.carFingerprint, Buttons.CANCEL))
+          self.sent_cancel = True
+      elif not CS.out.cruiseState.available:
+        if self.sent_cancel:
+          # We just disabled cruise control, try to bring it back
+          if frame % 20 == 0:
+            can_sends.append(mazdacan.create_button_cmd(self.packer, CS.CP.carFingerprint, Buttons.TURN_ON))
+      else:
+        # limit state change to 2Hz to make sure state sync
+        if frame % 50 == 0:
+          self.sent_cancel = False
+
 
     self.apply_steer_last = apply_steer
 
