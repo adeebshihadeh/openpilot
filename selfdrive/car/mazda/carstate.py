@@ -72,7 +72,7 @@ class CarState(CarStateBase):
                         cp.vl["DOORS"]["BL"], cp.vl["DOORS"]["BR"]])
 
     ret.gas = cp.vl["ENGINE_DATA"]["PEDAL_GAS"]
-    ret.gasPressed = (ret.gas > 0) or (self.ti_ramp_down) or (self.ti_state != 3) or (self.ti_violation) or (self.ti_error)
+    ret.gasPressed = (ret.gas > 0) or (self.ti_ramp_down) or (self.ti_state != 3) #or (self.ti_violation) or (self.ti_error)
 
     ret.leftBlindspot = cp.vl["BSM"]["LEFT_BS1"] == 1
     ret.rightBlindspot = cp.vl["BSM"]["RIGHT_BS1"] == 1
