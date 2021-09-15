@@ -8,16 +8,16 @@ Ecu = car.CarParams.Ecu
 # Steer torque limits
 class CarControllerParams:
   STEER_MAX = 600                # theoretical max_steer 2047
-  STEER_DELTA_UP = 25             # torque increase per refresh
-  STEER_DELTA_DOWN = 25           # torque decrease per refresh
+  STEER_DELTA_UP = 5             # torque increase per refresh
+  STEER_DELTA_DOWN = 15           # torque decrease per refresh
   STEER_DRIVER_ALLOWANCE = 5    # allowed driver torque before start limiting
   STEER_DRIVER_MULTIPLIER = 40     # weight driver torque
   STEER_DRIVER_FACTOR = 1         # from dbc
   STEER_ERROR_MAX = 350           # max delta between torque cmd and torque motor
 
   TI_STEER_MAX = 600                # theoretical max_steer 2047
-  TI_STEER_DELTA_UP = 25             # torque increase per refresh
-  TI_STEER_DELTA_DOWN = 25           # torque decrease per refresh
+  TI_STEER_DELTA_UP = 5             # torque increase per refresh
+  TI_STEER_DELTA_DOWN = 15           # torque decrease per refresh
   TI_STEER_DRIVER_ALLOWANCE = 5    # allowed driver torque before start limiting
   TI_STEER_DRIVER_MULTIPLIER = 40     # weight driver torque
   TI_STEER_DRIVER_FACTOR = 1         # from dbc
@@ -31,10 +31,10 @@ class CAR:
   CX9_2021 = "Mazda CX-9 2021"   # No Steer Lockout
 
 class LKAS_LIMITS:
-  STEER_THRESHOLD = 8
+  STEER_THRESHOLD = 5
   DISABLE_SPEED = 0    # kph
   ENABLE_SPEED = 0     # kph
-  TI_STEER_THRESHOLD = 15
+  TI_STEER_THRESHOLD = 5
   TI_DISABLE_SPEED = 0    # kph
   TI_ENABLE_SPEED = 0     # kph
 

@@ -20,7 +20,7 @@ class CarState(CarStateBase):
 
     self.ti_ramp_down = False
     self.ti_version = 1
-    self.ti_state = 0
+    self.ti_state = 3
     self.ti_violation = 0
     self.ti_error = 0
   def update(self, cp, cp_cam):
@@ -51,7 +51,7 @@ class CarState(CarStateBase):
       self.ti_violation = cp.vl["TI_FEEDBACK"]["VIOL"] # 0 = no violation
       self.ti_error = cp.vl["TI_FEEDBACK"]["ERROR"] # 0 = no error
       if self.ti_version > 1:
-        self.ti_ramp_down = cp.vl["TI_FEEDBACK"]["RAMP_DOWN"]
+        self.ti_ramp_down = (cp.vl["TI_FEEDBACK"]["RAMP_DOWN"] == 1)
           
       ret.steeringPressed = abs(ret.steeringTorque) > LKAS_LIMITS.TI_STEER_THRESHOLD
 
@@ -72,7 +72,7 @@ class CarState(CarStateBase):
                         cp.vl["DOORS"]["BL"], cp.vl["DOORS"]["BR"]])
 
     ret.gas = cp.vl["ENGINE_DATA"]["PEDAL_GAS"]
-    ret.gasPressed = (ret.gas > 0)
+    ret.gasPressed = (ret.gas > 0) or (self.ti_ramp_down) or (self.ti_state != 3)
 
     ret.leftBlindspot = cp.vl["BSM"]["LEFT_BS1"] == 1
     ret.rightBlindspot = cp.vl["BSM"]["RIGHT_BS1"] == 1
