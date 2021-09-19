@@ -106,7 +106,7 @@ static int mazda_rx_hook(CAN_FIFOMailBox_TypeDef *to_push) {
           if (mazda_lkas_allowed) {
             controls_allowed = 1;
           } else {
-            controls_allowed = 0;
+            controls_allowed = 1;
             cruise_engaged = false;
           }
         }
