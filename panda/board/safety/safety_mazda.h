@@ -100,16 +100,16 @@ static int mazda_rx_hook(CAN_FIFOMailBox_TypeDef *to_push) {
     }
 
     // enter controls on rising edge of ACC, exit controls on ACC off
-    if (addr == MAZDA_CRZ_CTRL) {
-      bool cruise_engaged = true ;
+    if (addr == MAZDA_CRZ_EVENTS) {
+      bool cruise_engaged = (GET_BYTE(to_push, 0) & 0x80);
       if (cruise_engaged) {
         if (!cruise_engaged_prev) {
           // do not engage until we hit the speed at which lkas is on
           if (mazda_lkas_allowed) {
             controls_allowed = 1;
           } else {
-            controls_allowed = 1;
-            cruise_engaged = true;
+            controls_allowed = 0;
+            cruise_engaged = false;
           }
         }
       } else {
@@ -117,7 +117,6 @@ static int mazda_rx_hook(CAN_FIFOMailBox_TypeDef *to_push) {
       }
       cruise_engaged_prev = cruise_engaged;
     }
-
     if (addr == MAZDA_ENGINE_DATA) {
       gas_pressed = (GET_BYTE(to_push, 4) || (GET_BYTE(to_push, 5) & 0xF0));
     }
