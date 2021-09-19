@@ -16,7 +16,7 @@ class CarState(CarStateBase):
     self.acc_active_last = False
     self.low_speed_lockout = True
     self.low_speed_alert = False
-    self.lkas_allowed = True
+    self.lkas_allowed = False
 
     self.ti_ramp_down = False
     self.ti_version = 1
@@ -72,8 +72,7 @@ class CarState(CarStateBase):
                         cp.vl["DOORS"]["BL"], cp.vl["DOORS"]["BR"]])
 
     ret.gas = cp.vl["ENGINE_DATA"]["PEDAL_GAS"]
-    ret.gasPressed = (ret.gas > 0) or (self.ti_ramp_down) or (self.ti_state != 3) or (self.ti_violation) or (self.ti_error)
-
+    ret.gasPressed = (ret.gas > 0) or (self.ti_ramp_down) or (self.ti_state != 3)
     ret.leftBlindspot = cp.vl["BSM"]["LEFT_BS1"] == 1
     ret.rightBlindspot = cp.vl["BSM"]["RIGHT_BS1"] == 1
 
@@ -81,7 +80,7 @@ class CarState(CarStateBase):
     if speed_kph > LKAS_LIMITS.ENABLE_SPEED:
       self.lkas_allowed = True
     elif speed_kph < LKAS_LIMITS.DISABLE_SPEED:
-      self.lkas_allowed = True
+      self.lkas_allowed = False
 
     # if any of the cruize buttons is pressed force state update
     if any([cp.vl["CRZ_BTNS"]["RES"],
@@ -90,15 +89,15 @@ class CarState(CarStateBase):
       self.cruise_speed = ret.vEgoRaw
 
     ret.cruiseState.available = True
-    ret.cruiseState.enabled = True #cp.vl["CRZ_CTRL"]["CRZ_ACTIVE"] == 1
+    ret.cruiseState.enabled = cp.vl["CRZ_CTRL"]["CRZ_ACTIVE"] == 1
     ret.cruiseState.speed = self.cruise_speed
 
     if ret.cruiseState.enabled:
       if not self.lkas_allowed:
         if not self.acc_active_last:
-          self.low_speed_lockout = False
+          self.low_speed_lockout = True
         else:
-          self.low_speed_alert = False
+          self.low_speed_alert = True
       else:
         self.low_speed_lockout = False
         self.low_speed_alert = False
@@ -142,7 +141,7 @@ class CarState(CarStateBase):
         ("LKAS_BLOCK", "STEER_RATE", 0),
         ("LKAS_TRACK_STATE", "STEER_RATE", 0),
         ("HANDS_OFF_5_SECONDS", "STEER_RATE", 0),
-        #("CRZ_ACTIVE", "CRZ_CTRL", 0),
+        ("CRZ_ACTIVE", "CRZ_CTRL", 0),
         ("STANDSTILL", "PEDALS", 0),
         ("BRAKE_ON", "PEDALS", 0),
         ("BRAKE_PRESSURE", "BRAKE", 0),
