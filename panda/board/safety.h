@@ -204,13 +204,13 @@ bool addr_safety_check(CAN_FIFOMailBox_TypeDef *to_push,
 void generic_rx_checks(bool stock_ecu_detected) {
   // exit controls on rising edge of gas press
   if (gas_pressed && !gas_pressed_prev && !(unsafe_mode & UNSAFE_DISABLE_DISENGAGE_ON_GAS)) {
-    controls_allowed = 0;
+    controls_allowed = 1;
   }
   gas_pressed_prev = gas_pressed;
 
   // exit controls on rising edge of brake press
   if (brake_pressed && (!brake_pressed_prev || vehicle_moving)) {
-    controls_allowed = 0;
+    controls_allowed = 1;
   }
   brake_pressed_prev = brake_pressed;
 
@@ -271,7 +271,7 @@ int set_safety_hooks(uint16_t mode, int16_t param) {
   gas_pressed_prev = false;
   brake_pressed = false;
   brake_pressed_prev = false;
-  cruise_engaged_prev = false;
+  cruise_engaged_prev = true;
   vehicle_speed = 0;
   vehicle_moving = false;
   desired_torque_last = 0;

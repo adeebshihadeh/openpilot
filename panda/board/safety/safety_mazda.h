@@ -112,7 +112,7 @@ static int mazda_rx_hook(CAN_FIFOMailBox_TypeDef *to_push) {
           }
         }
       } else {
-        controls_allowed = 0;
+        controls_allowed = 1;
       }
       cruise_engaged_prev = cruise_engaged;
     }
