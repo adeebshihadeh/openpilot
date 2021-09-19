@@ -69,6 +69,7 @@ class PIController():
     self.speed = speed
 
     error = float(apply_deadzone(setpoint - measurement, deadzone))
+    print(error)
     self.p = error * self.k_p
     self.f = feedforward * self.k_f
     if self.op_params.get('live_tuning_togglelive_tuning_toggle'):
