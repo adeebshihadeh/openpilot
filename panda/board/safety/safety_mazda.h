@@ -26,11 +26,11 @@
 #define MAZDA_MAX_TORQUE_ERROR 350
 
 // lkas enable speed 52kph, disable at 45kph
-#define MAZDA_LKAS_ENABLE_SPEED  5200
-#define MAZDA_LKAS_DISABLE_SPEED 4500
+#define MAZDA_LKAS_ENABLE_SPEED  0
+#define MAZDA_LKAS_DISABLE_SPEED 0
 
-#define TI_LKAS_ENABLE_SPEED  2800
-#define TI_LKAS_DISABLE_SPEED 2300
+#define TI_LKAS_ENABLE_SPEED  0
+#define TI_LKAS_DISABLE_SPEED 0
 
 const CanMsg MAZDA_TX_MSGS[] = {{MAZDA_LKAS, 0, 8}, {MAZDA_CRZ_BTNS, 0, 8}, {MAZDA_LKAS2, 0, 8}};
 bool mazda_lkas_allowed = true;
@@ -99,14 +99,14 @@ static int mazda_rx_hook(CAN_FIFOMailBox_TypeDef *to_push) {
 
     // enter controls on rising edge of ACC, exit controls on ACC off
     if (addr == MAZDA_CRZ_CTRL) {
-      bool cruise_engaged = GET_BYTE(to_push, 0) & 8;
+      bool cruise_engaged = True;
       if (cruise_engaged) {
         if (!cruise_engaged_prev) {
           // do not engage until we hit the speed at which lkas is on
           if (mazda_lkas_allowed) {
             controls_allowed = 1;
           } else {
-            controls_allowed = 1;
+            controls_allowed = 0;
             cruise_engaged = false;
           }
         }
