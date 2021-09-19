@@ -63,9 +63,9 @@ class CarInterface(CarInterfaceBase):
         ret.steerRatio = 14.0
         ret.lateralTuning.pid.kiBP = [5.0, 25.0]
         ret.lateralTuning.pid.kpBP = [5.0, 25.0]
-        ret.lateralTuning.pid.kpV = [0.2,0.26]
-        ret.lateralTuning.pid.kiV = [0.06,0.11]
-        ret.lateralTuning.pid.kf = 0.00005
+        ret.lateralTuning.pid.kpV = [0.25,0.28]
+        ret.lateralTuning.pid.kiV = [0.06,0.3]
+        ret.lateralTuning.pid.kf = 0.00006
       elif candidate == CAR.MAZDA6:
         ret.mass = 3443 * CV.LB_TO_KG + STD_CARGO_KG
         ret.wheelbase = 2.83
@@ -96,9 +96,9 @@ class CarInterface(CarInterfaceBase):
         ret.steerRatio = 14.0
         ret.lateralTuning.pid.kiBP = [5.0, 25.0]
         ret.lateralTuning.pid.kpBP = [5.0, 25.0]
-        ret.lateralTuning.pid.kpV = [0.2,0.26]
-        ret.lateralTuning.pid.kiV = [0.06,0.11]
-        ret.lateralTuning.pid.kf = 0.00005
+        ret.lateralTuning.pid.kpV = [0.25,0.28]
+        ret.lateralTuning.pid.kiV = [0.06,0.3]
+        ret.lateralTuning.pid.kf = 0.00006
       elif candidate == CAR.MAZDA6:
         ret.mass = 3443 * CV.LB_TO_KG + STD_CARGO_KG
         ret.wheelbase = 2.83
