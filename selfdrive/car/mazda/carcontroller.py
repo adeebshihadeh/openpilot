@@ -36,10 +36,10 @@ class CarController():
     else:
       apply_steer = 0
       self.steer_rate_limited = False
-      #if CS.out.cruiseState.enabled and frame % 20 == 0:
+      if CS.out.cruiseState.enabled and frame % 20 == 0:
         # Cancel Stock ACC if it's enabled while OP is disengaged
         # Send at a rate of 5hz until we sync with stock ACC state
-        # can_sends.append(mazdacan.create_button_cmd(self.packer, CS.CP.carFingerprint, Buttons.CANCEL))
+        can_sends.append(mazdacan.create_button_cmd(self.packer, CS.CP.carFingerprint, Buttons.CANCEL))
 
     
     

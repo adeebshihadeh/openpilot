@@ -101,7 +101,7 @@ static int mazda_rx_hook(CAN_FIFOMailBox_TypeDef *to_push) {
 
     // enter controls on rising edge of ACC, exit controls on ACC off
     if (addr == MAZDA_CRZ_EVENTS) {
-      bool cruise_engaged = (GET_BYTE(to_push, 0) & 0x80);
+      bool cruise_engaged = (GET_BYTE(to_push, 2) & 0x80);
       if (cruise_engaged) {
         if (!cruise_engaged_prev) {
           // do not engage until we hit the speed at which lkas is on
