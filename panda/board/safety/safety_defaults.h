@@ -7,7 +7,7 @@ int default_rx_hook(CAN_FIFOMailBox_TypeDef *to_push) {
 
 static void nooutput_init(int16_t param) {
   UNUSED(param);
-  controls_allowed = true;
+  controls_allowed = false;
   relay_malfunction_reset();
 }
 
