@@ -89,7 +89,7 @@ class CarState(CarStateBase):
       self.cruise_speed = ret.vEgoRaw
 
     ret.cruiseState.available = True
-    ret.cruiseState.enabled = (cp.vl["CRZ_CTRL"]["CRZ_ACTIVE"] == 1) or (cp.vl["CRZ_EVENTS"]["NEW_SIGNAL_21"] == 1)
+    ret.cruiseState.enabled = (cp.vl["CRZ_EVENTS"]["NEW_SIGNAL_21"] == 1)
     ret.cruiseState.speed = self.cruise_speed
 
     if ret.cruiseState.enabled:
