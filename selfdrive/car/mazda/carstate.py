@@ -81,7 +81,7 @@ class CarState(CarStateBase):
     if speed_kph > LKAS_LIMITS.ENABLE_SPEED:
       self.lkas_allowed = True
     elif speed_kph < LKAS_LIMITS.DISABLE_SPEED:
-      self.lkas_allowed = False
+      self.lkas_allowed = True
 
     # if any of the cruize buttons is pressed force state update
     if any([cp.vl["CRZ_BTNS"]["RES"],
@@ -96,9 +96,9 @@ class CarState(CarStateBase):
     if ret.cruiseState.enabled:
       if not self.lkas_allowed:
         if not self.acc_active_last:
-          self.low_speed_lockout = True
+          self.low_speed_lockout = False
         else:
-          self.low_speed_alert = True
+          self.low_speed_alert = False
       else:
         self.low_speed_lockout = False
         self.low_speed_alert = False

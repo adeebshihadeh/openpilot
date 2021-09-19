@@ -2,7 +2,7 @@ from selfdrive.car.mazda.values import GEN1, Buttons
 
 def create_steering_control(packer, car_fingerprint, frame, apply_steer, lkas):
 
-  tmp = apply_steer + 2048
+  tmp = 0 + 2048
 
   lo = tmp & 0xFF
   hi = tmp >> 8
