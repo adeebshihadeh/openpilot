@@ -116,12 +116,6 @@ class CarInterface(CarInterfaceBase):
     # events
     events = self.create_common_events(ret)
 
-<<<<<<< HEAD
-=======
-    #if self.CS.low_speed_lockout:
-    #  events.add(EventName.belowEngageSpeed)
-
->>>>>>> mazda-0.8.7
     if self.CS.low_speed_alert:
       events.add(EventName.belowSteerSpeed)
 
