@@ -21,6 +21,9 @@ class CarInterface(CarInterfaceBase):
 
     ret.carName = "mazda"
     ret.safetyModel = car.CarParams.SafetyModel.mazda
+    #ret.dashcamOnly = candidate in STEER_LOCK_CAR
+
+    ret.radarOffCan = True
 
     ret.radarOffCan = True
     ret.communityFeature = True
@@ -113,6 +116,12 @@ class CarInterface(CarInterfaceBase):
     # events
     events = self.create_common_events(ret)
 
+<<<<<<< HEAD
+=======
+    #if self.CS.low_speed_lockout:
+    #  events.add(EventName.belowEngageSpeed)
+
+>>>>>>> mazda-0.8.7
     if self.CS.low_speed_alert:
       events.add(EventName.belowSteerSpeed)
 

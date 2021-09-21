@@ -206,7 +206,7 @@ static void mazda_init(int16_t param) {
   UNUSED(param);
   controls_allowed = false;
   relay_malfunction_reset();
-  mazda_lkas_allowed = false;
+  mazda_lkas_allowed = true;
   torque_interceptor_detected = 0;
 }
 
