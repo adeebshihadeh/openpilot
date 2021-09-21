@@ -8,13 +8,10 @@ from selfdrive.car.fw_versions import get_fw_versions, match_fw_to_car
 from selfdrive.swaglog import cloudlog
 import cereal.messaging as messaging
 from selfdrive.car import gen_empty_fingerprint
-
 from selfdrive import global_ti
-
 from cereal import car
 from cereal import log
 EventName = car.CarEvent.EventName
-DynamicParam = log.PandaState
 
 
 def get_startup_event(car_recognized, controller_available, fuzzy_fingerprint, fw_seen):
@@ -185,6 +182,7 @@ def fingerprint(logcan, sendcan):
 
 def get_car(logcan, sendcan):
   candidate, fingerprints, vin, car_fw, source, exact_match = fingerprint(logcan, sendcan)
+
   if candidate is None:
     cloudlog.warning("car doesn't match any fingerprints: %r", fingerprints)
     candidate = "mock"

@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 from selfdrive.car import gen_empty_fingerprint
 
-
 global saved_candidate
 saved_candidate = {}
 global saved_finger 

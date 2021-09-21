@@ -1,6 +1,5 @@
 import numpy as np
 from common.numpy_fast import clip, interp
-from common.op_params import opParams #live tuning
 
 def apply_deadzone(error, deadzone):
   if error > deadzone:
@@ -17,8 +16,6 @@ class PIController():
     self._k_i = k_i  # integral gain
     self.k_f = k_f  # feedforward gain
 
-    self.op_params = opParams() #live tuning
-
     self.pos_limit = pos_limit
     self.neg_limit = neg_limit
 
@@ -32,18 +29,11 @@ class PIController():
 
   @property
   def k_p(self):
-    if self.op_params.get('live_tuning_togglelive_tuning_toggle'):
-      return self.op_params.get('lat_p')
-    else:
-      return interp(self.speed, self._k_p[0], self._k_p[1])
+    return interp(self.speed, self._k_p[0], self._k_p[1])
 
   @property
   def k_i(self):
-    if self.op_params.get('live_tuning_togglelive_tuning_toggle'):
-      return self.op_params.get('lat_i')
-    else:
-      return interp(self.speed, self._k_i[0], self._k_i[1])
-
+    return interp(self.speed, self._k_i[0], self._k_i[1])
 
   def _check_saturation(self, control, check_saturation, error):
     saturated = (control < self.neg_limit) or (control > self.pos_limit)
@@ -71,8 +61,6 @@ class PIController():
     error = float(apply_deadzone(setpoint - measurement, deadzone))
     self.p = error * self.k_p
     self.f = feedforward * self.k_f
-    if self.op_params.get('live_tuning_togglelive_tuning_toggle'):
-      self.f = feedforward * self.op_params.get('lat_f')
 
     if override:
       self.i -= self.i_unwind_rate * float(np.sign(self.i))

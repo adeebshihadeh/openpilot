@@ -2,7 +2,6 @@
 
 from selfdrive.car import dbc_dict
 from cereal import car
-from common.op_params import opParams #live tuning
 Ecu = car.CarParams.Ecu
 
 # Steer torque limits

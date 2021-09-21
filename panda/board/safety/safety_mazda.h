@@ -2,7 +2,6 @@
 #define MAZDA_LKAS          0x243
 #define MAZDA_LKAS2         0x249
 #define MAZDA_CRZ_CTRL      0x21C
-#define MAZDA_CRZ_EVENTS    0x21F
 #define MAZDA_CRZ_BTNS      0x09D
 #define TI_STEER_TORQUE     0x24A
 #define MAZDA_STEER_TORQUE  0x240
@@ -38,24 +37,13 @@ bool mazda_lkas_allowed = true;
 
 AddrCheckStruct mazda_rx_checks[] = {
   {.msg = {{MAZDA_CRZ_CTRL,     0, 8, .expected_timestep = 20000U}, { 0 }, { 0 }}},
-  {.msg = {{MAZDA_CRZ_EVENTS,   0, 8, .expected_timestep = 20000U}, { 0 }, { 0 }}},
   {.msg = {{MAZDA_CRZ_BTNS,     0, 8, .expected_timestep = 100000U}, { 0 }, { 0 }}},
   {.msg = {{MAZDA_STEER_TORQUE, 0, 8, .expected_timestep = 12000U}, { 0 }, { 0 }}},
   {.msg = {{MAZDA_ENGINE_DATA,  0, 8, .expected_timestep = 10000U}, { 0 }, { 0 }}},
   {.msg = {{MAZDA_PEDALS,       0, 8, .expected_timestep = 20000U}, { 0 }, { 0 }}},
 };
 const int MAZDA_RX_CHECKS_LEN = sizeof(mazda_rx_checks) / sizeof(mazda_rx_checks[0]);
-//not used///////////////////
-AddrCheckStruct mazda_ti_rx_checks[] = {
-  {.msg = {{MAZDA_CRZ_CTRL,     0, 8, .expected_timestep = 20000U}}},
-  {.msg = {{MAZDA_CRZ_BTNS,     0, 8, .expected_timestep = 100000U}}},
-  {.msg = {{MAZDA_STEER_TORQUE, 0, 8, .expected_timestep = 12000U}}},
-  {.msg = {{MAZDA_ENGINE_DATA,  0, 8, .expected_timestep = 10000U}}},
-  {.msg = {{MAZDA_PEDALS,       0, 8, .expected_timestep = 20000U}}},
-  {.msg = {{TI_STEER_TORQUE,    0, 8, .expected_timestep = 72000U}}},
-};
-const int MAZDA_TI_RX_CHECKS_LEN = sizeof(mazda_ti_rx_checks) / sizeof(mazda_ti_rx_checks[0]);
-////////////////////////////
+
 // track msgs coming from OP so that we know what CAM msgs to drop and what to forward
 static int mazda_rx_hook(CAN_FIFOMailBox_TypeDef *to_push) {
   bool valid = addr_safety_check(to_push, mazda_rx_checks, MAZDA_RX_CHECKS_LEN,
@@ -100,8 +88,8 @@ static int mazda_rx_hook(CAN_FIFOMailBox_TypeDef *to_push) {
     }
 
     // enter controls on rising edge of ACC, exit controls on ACC off
-    if (addr == MAZDA_CRZ_EVENTS) {
-      bool cruise_engaged = (GET_BYTE(to_push, 2) & 0x80);
+    if (addr == MAZDA_CRZ_CTRL) {
+      bool cruise_engaged = GET_BYTE(to_push, 0) & 8;
       if (cruise_engaged) {
         if (!cruise_engaged_prev) {
           // do not engage until we hit the speed at which lkas is on
@@ -117,6 +105,7 @@ static int mazda_rx_hook(CAN_FIFOMailBox_TypeDef *to_push) {
       }
       cruise_engaged_prev = cruise_engaged;
     }
+
     if (addr == MAZDA_ENGINE_DATA) {
       gas_pressed = (GET_BYTE(to_push, 4) || (GET_BYTE(to_push, 5) & 0xF0));
     }

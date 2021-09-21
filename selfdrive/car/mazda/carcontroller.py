@@ -13,7 +13,8 @@ class CarController():
     """ Controls thread """
 
     can_sends = []
-    
+
+
     ### STEER ###
 
     if enabled:
@@ -41,8 +42,7 @@ class CarController():
         # Send at a rate of 5hz until we sync with stock ACC state
         can_sends.append(mazdacan.create_button_cmd(self.packer, CS.CP.carFingerprint, Buttons.CANCEL))
 
-    
-    
+
     #if ti is enabled we don't have to send apply steer to the stock system but a signal should still be sent.
     if CS.CP.enableTorqueInterceptor:
       can_sends.append(mazdacan.create_ti_steering_control(self.packer, CS.CP.carFingerprint,apply_steer))

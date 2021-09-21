@@ -242,22 +242,12 @@ class Controls:
     if not self.sm['liveParameters'].valid:
       self.events.add(EventName.vehicleModelInvalid)
 
-    #check pandaState to see if panda has detected TI_FEEDBACK.
+    # Check pandaState to see if panda has detected TI_FEEDBACK.
     if self.sm['pandaState'].torqueInterceptorDetected and not self.ti_ready:
       self.ti_ready = True
-      print("TI is found")
       self.CP.enableTorqueInterceptor = True
-     #Update CP based on torque_interceptor_ready
+      # Update CP based on torque_interceptor_ready
       self.CP = get_ti()
-      #Update self.Lac with new CP for tuning
-     # if self.CP.steerControlType == car.CarParams.SteerControlType.angle:
-      #  self.LaC = LatControlAngle(self.CP)
-      #elif self.CP.lateralTuning.which() == 'pid':
-      #  self.LaC = LatControlPID(self.CP)
-      #elif self.CP.lateralTuning.which() == 'indi':
-      #  self.LaC = LatControlINDI(self.CP)
-      #elif self.CP.lateralTuning.which() == 'lqr':
-      #  self.LaC = LatControlLQR(self.CP)
     
 
     if len(self.sm['radarState'].radarErrors):

@@ -45,15 +45,15 @@ class CarState(CarStateBase):
 
     if self.CP.enableTorqueInterceptor:
       ret.steeringTorque = cp.vl["TI_FEEDBACK"]["TI_TORQUE_SENSOR"]
+      ret.steeringPressed = abs(ret.steeringTorque) > LKAS_LIMITS.TI_STEER_THRESHOLD
 
       self.ti_version = cp.vl["TI_FEEDBACK"]["VERSION_NUMBER"]
       self.ti_state = cp.vl["TI_FEEDBACK"]["STATE"] # DISCOVER = 0, OFF = 1, DRIVER_OVER = 2, RUN=3
       self.ti_violation = cp.vl["TI_FEEDBACK"]["VIOL"] # 0 = no violation
       self.ti_error = cp.vl["TI_FEEDBACK"]["ERROR"] # 0 = no error
+
       if self.ti_version > 1:
         self.ti_ramp_down = (cp.vl["TI_FEEDBACK"]["RAMP_DOWN"] == 1)
-          
-      ret.steeringPressed = abs(ret.steeringTorque) > LKAS_LIMITS.TI_STEER_THRESHOLD
 
     else:
       ret.steeringTorque = cp.vl["STEER_TORQUE"]["STEER_TORQUE_SENSOR"]
@@ -73,6 +73,7 @@ class CarState(CarStateBase):
 
     ret.gas = cp.vl["ENGINE_DATA"]["PEDAL_GAS"]
     ret.gasPressed = (ret.gas > 0) or (self.ti_ramp_down) or (self.ti_state != 3)
+
     ret.leftBlindspot = cp.vl["BSM"]["LEFT_BS1"] == 1
     ret.rightBlindspot = cp.vl["BSM"]["RIGHT_BS1"] == 1
 
@@ -88,8 +89,8 @@ class CarState(CarStateBase):
                 cp.vl["CRZ_BTNS"]["SET_M"]]):
       self.cruise_speed = ret.vEgoRaw
 
-    ret.cruiseState.available = True
-    ret.cruiseState.enabled = (cp.vl["CRZ_EVENTS"]["NEW_SIGNAL_21"] == 1)
+    ret.cruiseState.available = cp.vl["CRZ_CTRL"]["CRZ_AVAILABLE"] == 1
+    ret.cruiseState.enabled = cp.vl["CRZ_CTRL"]["CRZ_ACTIVE"] == 1
     ret.cruiseState.speed = self.cruise_speed
 
     if ret.cruiseState.enabled:
@@ -128,6 +129,7 @@ class CarState(CarStateBase):
       ("RL", "WHEEL_SPEEDS", 0),
       ("RR", "WHEEL_SPEEDS", 0),
     ]
+
     checks = [
       # sig_address, frequency
       ("BLINK_INFO", 10),
@@ -136,13 +138,13 @@ class CarState(CarStateBase):
       ("STEER_TORQUE", 83),
       ("WHEEL_SPEEDS", 100),
     ]
+
     if CP.carFingerprint in GEN1:
       signals += [
         ("LKAS_BLOCK", "STEER_RATE", 0),
         ("LKAS_TRACK_STATE", "STEER_RATE", 0),
         ("HANDS_OFF_5_SECONDS", "STEER_RATE", 0),
         ("CRZ_ACTIVE", "CRZ_CTRL", 0),
-        ("NEW_SIGNAL_21","CRZ_EVENTS", 0),
         ("STANDSTILL", "PEDALS", 0),
         ("BRAKE_ON", "PEDALS", 0),
         ("BRAKE_PRESSURE", "BRAKE", 0),
@@ -165,7 +167,6 @@ class CarState(CarStateBase):
       checks += [
         ("ENGINE_DATA", 100),
         ("CRZ_CTRL", 50),
-        ("CRZ_EVENTS", 50),
         ("CRZ_BTNS", 10),
         ("PEDALS", 50),
         ("BRAKE", 50),

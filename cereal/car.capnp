@@ -108,9 +108,6 @@ struct CarEvent @0x9b1657f34caf3ad3 {
     driverCameraError @101;
     wideRoadCameraError @102;
     localizerMalfunction @103;
-    tiRampDown @105;
-    tiOverRide @106;
-
 
     driverMonitorLowAccDEPRECATED @68;
     radarCanErrorDEPRECATED @15;
@@ -196,8 +193,6 @@ struct CarState {
   # blindspot sensors
   leftBlindspot @33 :Bool; # Is there something blocking the left lane change
   rightBlindspot @34 :Bool; # Is there something blocking the right lane change
-
-  #tiRampDown @37 :Bool; # Is the Torque Interceptor ramping down its applied torque
 
   struct WheelSpeeds {
     # optional wheel speeds

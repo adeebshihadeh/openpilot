@@ -17,132 +17,71 @@ class CarInterface(CarInterfaceBase):
 
   @staticmethod
   def get_params(candidate, fingerprint=gen_empty_fingerprint(), car_fw=None):
-    print("in get_params, entering get_std_params")
     ret = CarInterfaceBase.get_std_params(candidate, fingerprint)
 
     ret.carName = "mazda"
     ret.safetyModel = car.CarParams.SafetyModel.mazda
-    #ret.dashcamOnly = candidate in STEER_LOCK_CAR
 
     ret.radarOffCan = True
     ret.communityFeature = True
-    
-
-    if ret.enableTorqueInterceptor:
-      print("Recieving torque interceptor signal.")
 
     ret.steerActuatorDelay = 0.0
     ret.steerRateCost = 1.0
     ret.steerLimitTimer = 0.8
     tire_stiffness_factor = 0.70   # not optimized yet
 
-    if ret.enableTorqueInterceptor:
-      print("Adjusting PID parameters for TI")
-      if candidate == CAR.CX5:
-        ret.mass = 3655 * CV.LB_TO_KG + STD_CARGO_KG
-        ret.wheelbase = 2.7
-        ret.steerRatio = 15.5
-        ret.lateralTuning.init('indi')
-        ret.lateralTuning.indi.innerLoopGainBP = [5.0, 35]
-        ret.lateralTuning.indi.innerLoopGainV = [4.5, 6.0]
-        ret.lateralTuning.indi.outerLoopGainBP = [5, 35]
-        ret.lateralTuning.indi.outerLoopGainV = [3.0, 6]
-        ret.lateralTuning.indi.timeConstantBP = [2, 35]
-        ret.lateralTuning.indi.timeConstantV = [0.2, 1.5]
-        ret.lateralTuning.indi.actuatorEffectivenessBP = [0, 25]
-        ret.lateralTuning.indi.actuatorEffectivenessV = [2.0, 1]
-      elif candidate in [CAR.CX9, CAR.CX9_2021]:
-        ret.mass = 4217 * CV.LB_TO_KG + STD_CARGO_KG
-        ret.wheelbase = 3.1
-        ret.steerRatio = 17.6
-        ret.lateralTuning.init('indi')
-        ret.lateralTuning.indi.innerLoopGainBP = [5.0, 35]
-        ret.lateralTuning.indi.innerLoopGainV = [4.5, 6.0]
-        ret.lateralTuning.indi.outerLoopGainBP = [5, 35]
-        ret.lateralTuning.indi.outerLoopGainV = [3.0, 6]
-        ret.lateralTuning.indi.timeConstantBP = [2, 35]
-        ret.lateralTuning.indi.timeConstantV = [0.2, 1.5]
-        ret.lateralTuning.indi.actuatorEffectivenessBP = [0, 25]
-        ret.lateralTuning.indi.actuatorEffectivenessV = [2.0, 1]
-      elif candidate == CAR.MAZDA3:
-        ret.mass = 2875 * CV.LB_TO_KG + STD_CARGO_KG
-        ret.wheelbase = 2.7
-        ret.steerRatio = 14.0
-        ret.lateralTuning.init('indi')
-        ret.lateralTuning.indi.innerLoopGainBP = [5.0, 35]
-        ret.lateralTuning.indi.innerLoopGainV = [4.5, 6.0]
-        ret.lateralTuning.indi.outerLoopGainBP = [5, 35]
-        ret.lateralTuning.indi.outerLoopGainV = [3.0, 6]
-        ret.lateralTuning.indi.timeConstantBP = [2, 35]
-        ret.lateralTuning.indi.timeConstantV = [0.2, 1.5]
-        ret.lateralTuning.indi.actuatorEffectivenessBP = [0, 25]
-        ret.lateralTuning.indi.actuatorEffectivenessV = [2.0, 1]
-      elif candidate == CAR.MAZDA6:
-        ret.mass = 3443 * CV.LB_TO_KG + STD_CARGO_KG
-        ret.wheelbase = 2.83
-        ret.steerRatio = 15.5
-        ret.lateralTuning.init('indi')
-        ret.lateralTuning.indi.innerLoopGainBP = [5.0, 35]
-        ret.lateralTuning.indi.innerLoopGainV = [4.5, 6.0]
-        ret.lateralTuning.indi.outerLoopGainBP = [5, 35]
-        ret.lateralTuning.indi.outerLoopGainV = [3.0, 6]
-        ret.lateralTuning.indi.timeConstantBP = [2, 35]
-        ret.lateralTuning.indi.timeConstantV = [0.2, 1.5]
-        ret.lateralTuning.indi.actuatorEffectivenessBP = [0, 25]
-        ret.lateralTuning.indi.actuatorEffectivenessV = [2.0, 1]
-    else:
-      if candidate == CAR.CX5:
-        ret.mass = 3655 * CV.LB_TO_KG + STD_CARGO_KG
-        ret.wheelbase = 2.7
-        ret.steerRatio = 15.5
-        ret.lateralTuning.init('indi')
-        ret.lateralTuning.indi.innerLoopGainBP = [5.0, 35]
-        ret.lateralTuning.indi.innerLoopGainV = [4.5, 6.0]
-        ret.lateralTuning.indi.outerLoopGainBP = [5, 35]
-        ret.lateralTuning.indi.outerLoopGainV = [3.0, 6]
-        ret.lateralTuning.indi.timeConstantBP = [2, 35]
-        ret.lateralTuning.indi.timeConstantV = [0.2, 1.5]
-        ret.lateralTuning.indi.actuatorEffectivenessBP = [0, 25]
-        ret.lateralTuning.indi.actuatorEffectivenessV = [2.0, 1]
-      elif candidate in [CAR.CX9, CAR.CX9_2021]:
-        ret.mass = 4217 * CV.LB_TO_KG + STD_CARGO_KG
-        ret.wheelbase = 3.1
-        ret.steerRatio = 17.6
-        ret.lateralTuning.init('indi')
-        ret.lateralTuning.indi.innerLoopGainBP = [5.0, 35]
-        ret.lateralTuning.indi.innerLoopGainV = [4.5, 6.0]
-        ret.lateralTuning.indi.outerLoopGainBP = [5, 35]
-        ret.lateralTuning.indi.outerLoopGainV = [3.0, 6]
-        ret.lateralTuning.indi.timeConstantBP = [2, 35]
-        ret.lateralTuning.indi.timeConstantV = [0.2, 1.5]
-        ret.lateralTuning.indi.actuatorEffectivenessBP = [0, 25]
-        ret.lateralTuning.indi.actuatorEffectivenessV = [2.0, 1]
-      elif candidate == CAR.MAZDA3:
-        ret.mass = 2875 * CV.LB_TO_KG + STD_CARGO_KG
-        ret.wheelbase = 2.7
-        ret.steerRatio = 14.0
-        ret.lateralTuning.init('indi')
-        ret.lateralTuning.indi.innerLoopGainBP = [5.0, 35]
-        ret.lateralTuning.indi.innerLoopGainV = [4.5, 6.0]
-        ret.lateralTuning.indi.outerLoopGainBP = [5, 35]
-        ret.lateralTuning.indi.outerLoopGainV = [3.0, 6]
-        ret.lateralTuning.indi.timeConstantBP = [2, 35]
-        ret.lateralTuning.indi.timeConstantV = [0.2, 1.5]
-        ret.lateralTuning.indi.actuatorEffectivenessBP = [0, 25]
-        ret.lateralTuning.indi.actuatorEffectivenessV = [2.0, 1]
-      elif candidate == CAR.MAZDA6:
-        ret.mass = 3443 * CV.LB_TO_KG + STD_CARGO_KG
-        ret.wheelbase = 2.83
-        ret.steerRatio = 15.5
-        ret.lateralTuning.init('indi')
-        ret.lateralTuning.indi.innerLoopGainBP = [5.0, 35]
-        ret.lateralTuning.indi.innerLoopGainV = [4.5, 6.0]
-        ret.lateralTuning.indi.outerLoopGainBP = [5, 35]
-        ret.lateralTuning.indi.outerLoopGainV = [3.0, 6]
-        ret.lateralTuning.indi.timeConstantBP = [2, 35]
-        ret.lateralTuning.indi.timeConstantV = [0.2, 1.5]
-        ret.lateralTuning.indi.actuatorEffectivenessBP = [0, 25]
-        ret.lateralTuning.indi.actuatorEffectivenessV = [2.0, 1]
+    if candidate == CAR.CX5:
+      ret.mass = 3655 * CV.LB_TO_KG + STD_CARGO_KG
+      ret.wheelbase = 2.7
+      ret.steerRatio = 15.5
+      ret.lateralTuning.init('indi')
+      ret.lateralTuning.indi.innerLoopGainBP = [5.0, 35]
+      ret.lateralTuning.indi.innerLoopGainV = [4.5, 6.0]
+      ret.lateralTuning.indi.outerLoopGainBP = [5, 35]
+      ret.lateralTuning.indi.outerLoopGainV = [3.0, 6]
+      ret.lateralTuning.indi.timeConstantBP = [2, 35]
+      ret.lateralTuning.indi.timeConstantV = [0.2, 1.5]
+      ret.lateralTuning.indi.actuatorEffectivenessBP = [0, 25]
+      ret.lateralTuning.indi.actuatorEffectivenessV = [2.0, 1]
+    elif candidate in [CAR.CX9, CAR.CX9_2021]:
+      ret.mass = 4217 * CV.LB_TO_KG + STD_CARGO_KG
+      ret.wheelbase = 3.1
+      ret.steerRatio = 17.6
+      ret.lateralTuning.init('indi')
+      ret.lateralTuning.indi.innerLoopGainBP = [5.0, 35]
+      ret.lateralTuning.indi.innerLoopGainV = [4.5, 6.0]
+      ret.lateralTuning.indi.outerLoopGainBP = [5, 35]
+      ret.lateralTuning.indi.outerLoopGainV = [3.0, 6]
+      ret.lateralTuning.indi.timeConstantBP = [2, 35]
+      ret.lateralTuning.indi.timeConstantV = [0.2, 1.5]
+      ret.lateralTuning.indi.actuatorEffectivenessBP = [0, 25]
+      ret.lateralTuning.indi.actuatorEffectivenessV = [2.0, 1]
+    elif candidate == CAR.MAZDA3:
+      ret.mass = 2875 * CV.LB_TO_KG + STD_CARGO_KG
+      ret.wheelbase = 2.7
+      ret.steerRatio = 14.0
+      ret.lateralTuning.init('indi')
+      ret.lateralTuning.indi.innerLoopGainBP = [5.0, 35]
+      ret.lateralTuning.indi.innerLoopGainV = [4.5, 6.0]
+      ret.lateralTuning.indi.outerLoopGainBP = [5, 35]
+      ret.lateralTuning.indi.outerLoopGainV = [3.0, 6]
+      ret.lateralTuning.indi.timeConstantBP = [2, 35]
+      ret.lateralTuning.indi.timeConstantV = [0.2, 1.5]
+      ret.lateralTuning.indi.actuatorEffectivenessBP = [0, 25]
+      ret.lateralTuning.indi.actuatorEffectivenessV = [2.0, 1]
+    elif candidate == CAR.MAZDA6:
+      ret.mass = 3443 * CV.LB_TO_KG + STD_CARGO_KG
+      ret.wheelbase = 2.83
+      ret.steerRatio = 15.5
+      ret.lateralTuning.init('indi')
+      ret.lateralTuning.indi.innerLoopGainBP = [5.0, 35]
+      ret.lateralTuning.indi.innerLoopGainV = [4.5, 6.0]
+      ret.lateralTuning.indi.outerLoopGainBP = [5, 35]
+      ret.lateralTuning.indi.outerLoopGainV = [3.0, 6]
+      ret.lateralTuning.indi.timeConstantBP = [2, 35]
+      ret.lateralTuning.indi.timeConstantV = [0.2, 1.5]
+      ret.lateralTuning.indi.actuatorEffectivenessBP = [0, 25]
+      ret.lateralTuning.indi.actuatorEffectivenessV = [2.0, 1]
 
     # No steer below disable speed
     ret.minSteerSpeed = LKAS_LIMITS.DISABLE_SPEED * CV.KPH_TO_MS
