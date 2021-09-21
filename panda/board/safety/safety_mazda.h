@@ -29,10 +29,14 @@
 #define MAZDA_LKAS_ENABLE_SPEED  0
 #define MAZDA_LKAS_DISABLE_SPEED 0
 
+<<<<<<< HEAD
 #define TI_LKAS_ENABLE_SPEED  0
 #define TI_LKAS_DISABLE_SPEED 0
 
 const CanMsg MAZDA_TX_MSGS[] = {{MAZDA_LKAS, 0, 8}, {MAZDA_CRZ_BTNS, 0, 8}, {MAZDA_LKAS2, 0, 8}};
+=======
+const CanMsg MAZDA_TX_MSGS[] = {{MAZDA_LKAS, 0, 8}, {MAZDA_CRZ_BTNS, 0, 8}};
+>>>>>>> mazda-0.8.7
 bool mazda_lkas_allowed = true;
 
 AddrCheckStruct mazda_rx_checks[] = {
@@ -206,7 +210,7 @@ static void mazda_init(int16_t param) {
   UNUSED(param);
   controls_allowed = false;
   relay_malfunction_reset();
-  mazda_lkas_allowed = false;
+  mazda_lkas_allowed = true;
   torque_interceptor_detected = 0;
 }
 
