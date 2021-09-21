@@ -96,9 +96,7 @@ TogglesPanel::TogglesPanel(QWidget *parent) : QWidget(parent) {
 DevicePanel::DevicePanel(QWidget* parent) : QWidget(parent) {
   QVBoxLayout *main_layout = new QVBoxLayout(this);
   Params params = Params();
-
-  QString dongle = QString::fromStdString(params.get("DongleId", false));
-  main_layout->addWidget(new LabelControl("Dongle ID", dongle));
+  main_layout->addWidget(new LabelControl("Dongle ID", getDongleId().value_or("N/A")));
   main_layout->addWidget(horizontal_line());
 
   QString serial = QString::fromStdString(params.get("HardwareSerial", false));
@@ -211,9 +209,8 @@ SoftwarePanel::SoftwarePanel(QWidget* parent) : QWidget(parent) {
   updateBtn = new ButtonControl("Check for Update", "");
   connect(updateBtn, &ButtonControl::clicked, [=]() {
     if (params.getBool("IsOffroad")) {
-      const QString paramsPath = QString::fromStdString(params.getParamsPath());
-      fs_watch->addPath(paramsPath + "/d/LastUpdateTime");
-      fs_watch->addPath(paramsPath + "/d/UpdateFailedCount");
+      fs_watch->addPath(QString::fromStdString(params.getParamPath("LastUpdateTime")));
+      fs_watch->addPath(QString::fromStdString(params.getParamPath("UpdateFailedCount")));
       updateBtn->setText("CHECKING");
       updateBtn->setEnabled(false);
     }
