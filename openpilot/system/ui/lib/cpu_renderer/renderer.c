@@ -494,9 +494,11 @@ int sr_drm_init(void) {
   drm_state.mode = connector->modes[0];
   drmModeFreeConnector(connector);
   drmModeFreeResources(resources);
+  const char *mdp_ui = getenv("CPU_MDP_UI");
   const char *mdp_camera = getenv("CPU_MDP_CAMERA");
   const int atomic_planes = find_atomic_planes(drm_state.fd, drm_state.crtc_id) == 0;
-  drm_state.mdp_ui = atomic_planes && drm_state.mode.vdisplay > drm_state.mode.hdisplay;
+  drm_state.mdp_ui = atomic_planes && drm_state.mode.vdisplay > drm_state.mode.hdisplay &&
+                     (!mdp_ui || strcmp(mdp_ui, "0") != 0);
   drm_state.mdp_camera = atomic_planes && (!mdp_camera || strcmp(mdp_camera, "0") != 0);
   const uint32_t buffer_width =
       drm_state.mdp_ui ? drm_state.mode.vdisplay : drm_state.mode.hdisplay;
@@ -506,9 +508,9 @@ int sr_drm_init(void) {
   // DRM ABGR8888, a format supported by MICI's inline SDE rotator.
   const uint32_t buffer_format = DRM_FORMAT_ABGR8888;
   if (create_scanout_buffer(drm_state.fd, buffer_width, buffer_height,
-                            buffer_format, drm_state.mdp_ui, &drm_state.buffers[0]) ||
+                            buffer_format, atomic_planes, &drm_state.buffers[0]) ||
       create_scanout_buffer(drm_state.fd, buffer_width, buffer_height,
-                            buffer_format, drm_state.mdp_ui, &drm_state.buffers[1])) return -1;
+                            buffer_format, atomic_planes, &drm_state.buffers[1])) return -1;
   FILE *origin = fopen("/sys/devices/platform/vendor/vendor:gpio-som-id/som_id", "r");
   int canonical_zero = 0;
   if (origin) {
