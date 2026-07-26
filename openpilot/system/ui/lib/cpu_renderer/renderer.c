@@ -129,6 +129,7 @@ typedef struct {
   int direct_render;
   int dirty_tiles;
   int dirty_tile_count;
+  int skip_cpu_fini;
   int color_correction;
   float color_contribution[3][3][256];
   uint8_t color_gamma[4096];
@@ -461,8 +462,10 @@ static int prepare_cpu_buffer(DrmBuffer *buffer) {
 
 static int finish_cpu_buffer(DrmBuffer *buffer) {
   if (!buffer->cached || !buffer->cpu_prepared) return 0;
-  struct drm_msm_gem_cpu_fini fini = {.handle = buffer->handle};
-  if (ioctl(drm_state.fd, DRM_IOCTL_MSM_GEM_CPU_FINI, &fini) < 0) return -errno;
+  if (!drm_state.skip_cpu_fini) {
+    struct drm_msm_gem_cpu_fini fini = {.handle = buffer->handle};
+    if (ioctl(drm_state.fd, DRM_IOCTL_MSM_GEM_CPU_FINI, &fini) < 0) return -errno;
+  }
   buffer->cpu_prepared = 0;
   return 0;
 }
@@ -518,6 +521,12 @@ int sr_drm_init(void) {
   drm_state.direct_render = !direct_render || strcmp(direct_render, "0") != 0;
   const char *dirty_tiles = getenv("CPU_DIRTY_TILES");
   drm_state.dirty_tiles = dirty_tiles && strcmp(dirty_tiles, "0") != 0;
+  // The downstream SDM845 MSM driver implements GEM_CPU_FINI as a no-op.
+  // This benchmark switch removes only that no-op syscall while retaining
+  // GEM_CPU_PREP's reservation-fence wait before every buffer reuse. Do not
+  // enable it on kernels where GEM_CPU_FINI performs cache maintenance.
+  const char *skip_cpu_fini = getenv("CPU_SKIP_MSM_CPU_FINI");
+  drm_state.skip_cpu_fini = skip_cpu_fini && strcmp(skip_cpu_fini, "0") != 0;
   drm_state.front = 0;
   drm_state.initialized = 1;
   return 0;
