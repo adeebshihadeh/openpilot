@@ -127,6 +127,8 @@ typedef struct {
   int camera_alpha;
   int camera_engaged;
   int direct_render;
+  int dirty_tiles;
+  int dirty_tile_count;
   int color_correction;
   float color_contribution[3][3][256];
   uint8_t color_gamma[4096];
@@ -514,6 +516,8 @@ int sr_drm_init(void) {
   if (!canonical_zero) init_color_correction();
   const char *direct_render = getenv("CPU_DIRECT_KMS");
   drm_state.direct_render = !direct_render || strcmp(direct_render, "0") != 0;
+  const char *dirty_tiles = getenv("CPU_DIRTY_TILES");
+  drm_state.dirty_tiles = dirty_tiles && strcmp(dirty_tiles, "0") != 0;
   drm_state.front = 0;
   drm_state.initialized = 1;
   return 0;
@@ -521,7 +525,7 @@ int sr_drm_init(void) {
 
 uint8_t *sr_drm_back_buffer(int *stride) {
   if (!drm_state.initialized || !drm_state.mdp_ui || !drm_state.direct_render ||
-      drm_state.color_correction) return NULL;
+      drm_state.color_correction || drm_state.dirty_tiles) return NULL;
   DrmBuffer *next = &drm_state.buffers[1 - drm_state.front];
   if (prepare_cpu_buffer(next) != 0) return NULL;
   if (stride) *stride = (int)next->pitch;
@@ -656,12 +660,36 @@ int sr_drm_present(const Surface *surface) {
   if (surface->pixels == next->map && surface->stride == (int)next->pitch) {
     // The renderer drew directly into the next KMS buffer.
   } else if (direct_copy) {
-    for (int y = 0; y < surface->height; ++y) {
-      const uint32_t *src = (const uint32_t *)(surface->pixels + y * surface->stride);
-      uint32_t *dst = (uint32_t *)(next->map + y * next->pitch);
-      for (int x = 0; x < surface->width; ++x) {
-        const uint32_t p = correct_display_color(src[x]);
-        dst[x] = p;
+    drm_state.dirty_tile_count = 0;
+    if (drm_state.dirty_tiles && !drm_state.color_correction) {
+      const int tile = 16;
+      for (int y0 = 0; y0 < surface->height; y0 += tile) {
+        const int y1 = y0 + tile < surface->height ? y0 + tile : surface->height;
+        for (int x0 = 0; x0 < surface->width; x0 += tile) {
+          const int x1 = x0 + tile < surface->width ? x0 + tile : surface->width;
+          const size_t bytes = (size_t)(x1 - x0) * 4;
+          int changed = 0;
+          for (int y = y0; y < y1 && !changed; ++y) {
+            const uint8_t *src = surface->pixels + y * surface->stride + x0 * 4;
+            const uint8_t *dst = next->map + y * next->pitch + x0 * 4;
+            changed = memcmp(src, dst, bytes) != 0;
+          }
+          if (!changed) continue;
+          ++drm_state.dirty_tile_count;
+          for (int y = y0; y < y1; ++y) {
+            memcpy(next->map + y * next->pitch + x0 * 4,
+                   surface->pixels + y * surface->stride + x0 * 4, bytes);
+          }
+        }
+      }
+    } else {
+      for (int y = 0; y < surface->height; ++y) {
+        const uint32_t *src = (const uint32_t *)(surface->pixels + y * surface->stride);
+        uint32_t *dst = (uint32_t *)(next->map + y * next->pitch);
+        for (int x = 0; x < surface->width; ++x) {
+          const uint32_t p = correct_display_color(src[x]);
+          dst[x] = p;
+        }
       }
     }
   } else {
@@ -839,6 +867,10 @@ double sr_drm_last_copy_ms(void) {
   return drm_state.last_copy_ms;
 }
 
+int sr_drm_last_dirty_tiles(void) {
+  return drm_state.dirty_tile_count;
+}
+
 void sr_drm_close(void) {
   if (!drm_state.initialized) return;
   int restored = 0;
@@ -879,6 +911,7 @@ void sr_drm_close(void) {
 int sr_drm_init(void) { return -1; }
 int sr_drm_present(const Surface *surface) { (void)surface; return -1; }
 double sr_drm_last_copy_ms(void) { return 0; }
+int sr_drm_last_dirty_tiles(void) { return 0; }
 uint8_t *sr_drm_back_buffer(int *stride) { (void)stride; return NULL; }
 void sr_drm_camera_begin_frame(void) {}
 int sr_drm_set_camera(int dma_fd, int width, int height, int stride, int uv_offset,

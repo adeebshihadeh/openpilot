@@ -146,6 +146,8 @@ def _build_native() -> tuple[ctypes.CDLL, tempfile.TemporaryDirectory | None]:
   lib.sr_drm_present.restype = ctypes.c_int
   lib.sr_drm_last_copy_ms.argtypes = []
   lib.sr_drm_last_copy_ms.restype = ctypes.c_double
+  lib.sr_drm_last_dirty_tiles.argtypes = []
+  lib.sr_drm_last_dirty_tiles.restype = ctypes.c_int
   lib.sr_drm_camera_begin_frame.argtypes = []
   lib.sr_drm_set_camera.argtypes = [
     ctypes.c_int, ctypes.c_int, ctypes.c_int, ctypes.c_int, ctypes.c_int,
@@ -374,6 +376,7 @@ def end_drawing() -> None:
       raise RuntimeError(f"CPU backend failed to present DRM framebuffer: errno {-result}")
     if state.profile_enabled:
       state.profile.setdefault("drm_rotate_copy", []).append(state.lib.sr_drm_last_copy_ms())
+      state.profile.setdefault("drm_dirty_tiles", []).append(state.lib.sr_drm_last_dirty_tiles())
 
 
 def clear_background(color) -> None:

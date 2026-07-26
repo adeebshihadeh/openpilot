@@ -32,6 +32,11 @@ QSEED/CSC path finishes scaling, color conversion, and composition under the
 transparent CPU overlay. Set `CPU_MDP_CAMERA=0` to force the CPU
 camera-conversion fallback.
 
+Set `CPU_DIRTY_TILES=1` to render into a persistent canonical overlay and
+propagate only changed 16x16 tiles into the next cached scanout buffer.
+`CPU_RENDER_PROFILE=1` then reports `drm_dirty_tiles`. This is an exact A/B for
+scanout writes; the immediate-mode UI is still rasterized in full.
+
 For representative end-to-end numbers, run
 `openpilot/selfdrive/ui/tests/profile_onroad.py` with `CPU_RENDER_PROFILE=1`.
 On a production-configured MICI, the harness pins the UI loop to core 5 just
