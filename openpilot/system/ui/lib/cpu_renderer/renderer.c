@@ -87,6 +87,7 @@ typedef struct {
   int presented;
   int clockwise;
   int mdp_ui;
+  int mdp_ui_rotate;
   int mdp_camera;
   uint32_t primary_plane_id;
   uint32_t camera_plane_id;
@@ -497,13 +498,13 @@ int sr_drm_init(void) {
   const char *mdp_ui = getenv("CPU_MDP_UI");
   const char *mdp_camera = getenv("CPU_MDP_CAMERA");
   const int atomic_planes = find_atomic_planes(drm_state.fd, drm_state.crtc_id) == 0;
-  drm_state.mdp_ui = atomic_planes && drm_state.mode.vdisplay > drm_state.mode.hdisplay &&
-                     (!mdp_ui || strcmp(mdp_ui, "0") != 0);
+  drm_state.mdp_ui = atomic_planes && drm_state.mode.vdisplay > drm_state.mode.hdisplay;
+  drm_state.mdp_ui_rotate = drm_state.mdp_ui && (!mdp_ui || strcmp(mdp_ui, "0") != 0);
   drm_state.mdp_camera = atomic_planes && (!mdp_camera || strcmp(mdp_camera, "0") != 0);
   const uint32_t buffer_width =
-      drm_state.mdp_ui ? drm_state.mode.vdisplay : drm_state.mode.hdisplay;
+      drm_state.mdp_ui_rotate ? drm_state.mode.vdisplay : drm_state.mode.hdisplay;
   const uint32_t buffer_height =
-      drm_state.mdp_ui ? drm_state.mode.hdisplay : drm_state.mode.vdisplay;
+      drm_state.mdp_ui_rotate ? drm_state.mode.hdisplay : drm_state.mode.vdisplay;
   // The software renderer's native RGBA byte order maps directly to
   // DRM ABGR8888, a format supported by MICI's inline SDE rotator.
   const uint32_t buffer_format = DRM_FORMAT_ABGR8888;
@@ -535,7 +536,7 @@ int sr_drm_init(void) {
 }
 
 uint8_t *sr_drm_back_buffer(int *stride) {
-  if (!drm_state.initialized || !drm_state.mdp_ui || !drm_state.direct_render ||
+  if (!drm_state.initialized || !drm_state.mdp_ui_rotate || !drm_state.direct_render ||
       drm_state.color_correction || drm_state.dirty_tiles) return NULL;
   DrmBuffer *next = &drm_state.buffers[1 - drm_state.front];
   if (prepare_cpu_buffer(next) != 0) return NULL;
@@ -744,13 +745,15 @@ int sr_drm_present(const Surface *surface) {
     ADD_ATOMIC(drm_state.primary_plane_id, drm_state.plane_crtc_h_prop, physical_height);
     ADD_ATOMIC(drm_state.primary_plane_id, drm_state.plane_src_x_prop, 0);
     ADD_ATOMIC(drm_state.primary_plane_id, drm_state.plane_src_y_prop, 0);
-    ADD_ATOMIC(drm_state.primary_plane_id, drm_state.plane_src_w_prop, (uint64_t)surface->width << 16);
-    ADD_ATOMIC(drm_state.primary_plane_id, drm_state.plane_src_h_prop, (uint64_t)surface->height << 16);
+    ADD_ATOMIC(drm_state.primary_plane_id, drm_state.plane_src_w_prop,
+               (uint64_t)(drm_state.mdp_ui_rotate ? surface->width : physical_width) << 16);
+    ADD_ATOMIC(drm_state.primary_plane_id, drm_state.plane_src_h_prop,
+               (uint64_t)(drm_state.mdp_ui_rotate ? surface->height : physical_height) << 16);
     ADD_ATOMIC(drm_state.primary_plane_id, drm_state.plane_rotation_prop,
-               drm_state.mdp_ui ?
+               drm_state.mdp_ui_rotate ?
                  (drm_state.clockwise ? DRM_MODE_ROTATE_270 : DRM_MODE_ROTATE_90) :
                  DRM_MODE_ROTATE_0);
-    if (drm_state.mdp_ui) {
+    if (drm_state.mdp_ui_rotate) {
       ADD_ATOMIC(drm_state.primary_plane_id, drm_state.plane_rot_dst_x_prop, 0);
       ADD_ATOMIC(drm_state.primary_plane_id, drm_state.plane_rot_dst_y_prop, 0);
       ADD_ATOMIC(drm_state.primary_plane_id, drm_state.plane_rot_dst_w_prop,
