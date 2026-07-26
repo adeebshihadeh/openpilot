@@ -1526,6 +1526,18 @@ void sr_blit_many(Surface *dst, const BlitItem *items, int count, uint32_t tint)
   }
 }
 
+void sr_blit_many_offset(Surface *dst, const BlitItem *items, int count,
+                         int offset_x, int offset_y, uint32_t tint) {
+  for (int index = 0; index < count; ++index) {
+    const BlitItem *item = &items[index];
+    sr_blit_scaled_impl(
+      dst, item->surface,
+      item->source_x, item->source_y, item->source_width, item->source_height,
+      item->destination_x + offset_x, item->destination_y + offset_y,
+      item->destination_width, item->destination_height, tint, 1);
+  }
+}
+
 void sr_blit_transform(Surface *dst, const Surface *src, float src_x, float src_y, float src_w, float src_h,
                        float dst_x, float dst_y, float dst_w, float dst_h,
                        float origin_x, float origin_y, float rotation, uint32_t tint) {

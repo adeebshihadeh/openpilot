@@ -118,6 +118,9 @@ def _build_native() -> tuple[ctypes.CDLL, tempfile.TemporaryDirectory | None]:
   ]
   lib.sr_blit_opaque.argtypes = [sp, sp, ctypes.c_int, ctypes.c_int]
   lib.sr_blit_many.argtypes = [sp, ctypes.POINTER(_BlitItem), ctypes.c_int, ctypes.c_uint32]
+  lib.sr_blit_many_offset.argtypes = [
+    sp, ctypes.POINTER(_BlitItem), ctypes.c_int, ctypes.c_int, ctypes.c_int, ctypes.c_uint32,
+  ]
   lib.sr_burn_in_filter.argtypes = [
     sp, ctypes.c_int, ctypes.c_int, ctypes.c_int, ctypes.c_int,
   ]
@@ -181,6 +184,13 @@ class _Nv12Data:
   has_front: bool = False
 
 
+@dataclass
+class _TextRun:
+  items: object
+  count: int
+  surfaces: tuple[_TextureData, ...]
+
+
 class _State:
   def __init__(self):
     self.lib, self.build_dir = _build_native()
@@ -197,6 +207,8 @@ class _State:
     self.next_texture_id = 1
     self.textures: dict[int, _TextureData] = {}
     self.scaled_textures: OrderedDict[tuple[object, ...], _TextureData] = OrderedDict()
+    self.text_runs: OrderedDict[tuple[object, ...], _TextRun] = OrderedDict()
+    self.text_cache_enabled = os.getenv("CPU_TEXT_CACHE", "1") != "0"
     self.render_targets: dict[int, _TextureData] = {}
     self.surface_stack: list[_Surface] = []
     self.nv12_cache: dict[int, _Nv12Data] = {}
@@ -329,6 +341,7 @@ def close_window() -> None:
     state.nv12_executor = None
   state.nv12_cache.clear()
   state.scaled_textures.clear()
+  state.text_runs.clear()
   state.render_targets.clear()
   state.textures.clear()
   state.surface_stack.clear()
@@ -817,6 +830,9 @@ def load_font(path: str):
 
 def unload_font(font) -> None:
   unload_texture(font.texture)
+  # Glyph pointers can be reused after CFFI releases a font. Do not retain
+  # layout entries keyed by a stale pointer.
+  state.text_runs.clear()
 
 
 def measure_text_ex(font, text: str, font_size: float, spacing: float):
@@ -845,7 +861,26 @@ def draw_text_ex(font, text: str, position, font_size: float, spacing: float, ti
   scale = font_size / font.baseSize
   x, y = _xy(position)
   line_x = x
+  sx, sy, _, _ = state.transform
+  anchor_x, anchor_y = _transform_xy(x, y)
+  # Rasterized runs are independent of their integer screen position. Include
+  # the subpixel phase because raylib's per-glyph rounding makes it observable.
+  cache_key = (
+    int(ffi.cast("uintptr_t", font.glyphs)), text, float(font_size), float(spacing),
+    sx, sy, anchor_x - round(anchor_x), anchor_y - round(anchor_y),
+  )
+  cached = state.text_runs.get(cache_key) if state.text_cache_enabled else None
+  if cached is not None:
+    state.text_runs.move_to_end(cache_key)
+    state.lib.sr_blit_many_offset(
+      ctypes.byref(state.surface), cached.items, cached.count,
+      round(anchor_x), round(anchor_y), _pack(tint),
+    )
+    if state.profile_enabled:
+      state.profile.setdefault("text_cache_hit", []).append(1.0)
+    return
   items = []
+  item_surfaces = []
   for char in text:
     if char == "\n":
       x = line_x
@@ -872,10 +907,32 @@ def draw_text_ex(font, text: str, position, font_size: float, spacing: float, ti
       source_x, source_y, source_width, source_height,
       round(dx), round(dy), round(dw), round(dh),
     ))
+    item_surfaces.append(glyph_data)
     x += glyph.advanceX * scale + spacing
   if items:
-    item_array = (_BlitItem * len(items))(*items)
-    state.lib.sr_blit_many(ctypes.byref(state.surface), item_array, len(items), _pack(tint))
+    if state.text_cache_enabled:
+      local_items = [
+        _BlitItem(item.surface, item.source_x, item.source_y, item.source_width, item.source_height,
+                  item.destination_x - round(anchor_x), item.destination_y - round(anchor_y),
+                  item.destination_width, item.destination_height)
+        for item in items
+      ]
+      item_array = (_BlitItem * len(local_items))(*local_items)
+      # Keep scaled glyph surfaces alive even if their independent LRU entry
+      # is evicted; cached ctypes pointers do not own their numpy storage.
+      cached = _TextRun(item_array, len(local_items), tuple(item_surfaces))
+      state.text_runs[cache_key] = cached
+      if len(state.text_runs) > 512:
+        state.text_runs.popitem(last=False)
+      state.lib.sr_blit_many_offset(
+        ctypes.byref(state.surface), item_array, len(local_items),
+        round(anchor_x), round(anchor_y), _pack(tint),
+      )
+      if state.profile_enabled:
+        state.profile.setdefault("text_cache_miss", []).append(1.0)
+    else:
+      item_array = (_BlitItem * len(items))(*items)
+      state.lib.sr_blit_many(ctypes.byref(state.surface), item_array, len(items), _pack(tint))
 
 
 def color_to_int(color) -> int:
